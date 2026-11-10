@@ -1984,6 +1984,7 @@ function readRows(){
 function updateSum(){ const el = $('#sumLine'); if (!el) return; const rows = readRows(); const s = rows.reduce((a,r) => ({ k: a.k + num(r.kcal), p: a.p + num(r.p) }), { k:0, p:0 }); el.textContent = `Summe: ${r0(s.k)} kcal · ${r0(s.p)} g Protein`; }
 
 async function estimateText(text, busyEl){
+  if (/FITFUX|"items"\s*:/.test(text)) { ['#quickText', '#slotQ'].forEach(q => { if ($(q)) $(q).value = ''; }); claudeImport(text); return; }
   const busy = busyEl || $('#quickBusy');
   if (!sample) { openFoodSheet([{ name: text }], 'Ohne Claude-Verbindung bitte Werte selbst eintragen.'); return; }
   busy.innerHTML = `<div class="busy"><div class="spin"></div>Claude schätzt die Nährwerte…</div>`;
@@ -2139,6 +2140,7 @@ function searchFoods(q){
   return [...mine.slice(0, 4), ...base.slice(0, 4), ...ch].slice(0, 10);
 }
 function renderSugg(inId = 'quickText', boxId = 'sugg'){
+  { const v = $('#' + inId)?.value || ''; if (/FITFUX/.test(v) && /\}\s*$/.test(v.trim())) { $('#' + inId).value = ''; closeSheet(); claudeImport(v); return; } }
   const el = $('#' + boxId); if (!el) return;
   const q = $('#' + inId)?.value || '';
   const res = searchFoods(q); el._res = res;
