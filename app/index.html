@@ -1253,14 +1253,14 @@ let offResults = [];
 const SLOT_MAP = { f:'Frühstück', 'frühstück':'Frühstück', fruehstueck:'Frühstück', m:'Mittag', mittag:'Mittag', mittagessen:'Mittag', a:'Abend', abend:'Abend', abendessen:'Abend', s:'Snack', snack:'Snack', snacks:'Snack' };
 function parseClaudeImport(txt){
   txt = String(txt || '').replace(/^\uFEFF/, '').replace(/[\u201C\u201D\u201E\u201F\u2033\u00AB\u00BB]/g, '"').replace(/[\u2018\u2019\u201A]/g, "'").replace(/\u00A0/g, ' ');
-  const out = []; let date = null;
+  const out = []; let date = null, save = false;
   const jm = txt.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
-  if (jm) { try { let j = JSON.parse(jm[0]); if (!Array.isArray(j)) { date = j.d || j.date || null; j = j.items || j.i || []; }
+  if (jm) { try { let j = JSON.parse(jm[0]); if (!Array.isArray(j)) { date = j.d || j.date || null; save = !!(j.save || j.meine); j = j.items || j.i || []; }
     for (const x of j) { const k = num(x.k ?? x.kcal); if (!(x.n || x.name) || !k) continue;
       out.push({ name: String(x.n || x.name).slice(0, 80), amount: String(x.a || x.amount || ''), kcal: r0(k), p: r1(num(x.p)), c: r1(num(x.c ?? x.kh)), f: r1(num(x.f)), slot: SLOT_MAP[String(x.s || x.slot || '').toLowerCase()] || null }); } } catch {} }
   if (!out.length) for (const line of txt.split(/\n/)) { const c = line.split(/[|;]/).map(x => x.trim()); if (c.length >= 3 && num(c[2])) out.push({ name: c[0].replace(/^[-•*\s]+/, ''), amount: c[1], kcal: r0(num(c[2])), p: r1(num(c[3])), c: r1(num(c[4])), f: r1(num(c[5])), slot: SLOT_MAP[String(c[6] || '').toLowerCase()] || null }); }
   if (date && !/^\d{4}-\d\d-\d\d$/.test(date)) date = null;
-  return { items: out, date };
+  return { items: out, date, save };
 }
 async function claudeImport(prefill){
   let txt = prefill ?? (await window.FX?.readClipboard?.()) ?? '';
@@ -1270,6 +1270,11 @@ async function claudeImport(prefill){
       <p class="muted small">In der Zwischenablage war kein FitFux-Code. Kopiere in Claude den Block, der mit <b>FITFUX</b> beginnt, und füge ihn hier ein:</p>
       <textarea id="clIn" rows="6" style="width:100%;font-size:12px" placeholder='FITFUX {"items":[…]}'></textarea>
       <button class="btn acc full" style="margin-top:10px" data-act="claudeImportGo">Prüfen</button>`); return; }
+  if (P.save) { sheetState = { kind:'clSave', items:P.items };
+    openSheet(`<div class="row"><h2 class="grow">Zu „Meine“ hinzufügen</h2><button class="icon-btn" data-act="closeSheet">✕</button></div>
+      <p class="muted small">${P.items.length} Lebensmittel als Standard speichern – danach als Kachel unter „Meine Rezepte“ und oben in der Suche. Nichts wird eingetragen.</p>
+      <div class="cl-list">${P.items.map((x, i) => `<label class="cl-i"><input type="checkbox" checked data-cl="${i}"><span class="grow"><b>${esc(x.name)}</b><span class="muted small">${esc(x.amount)} · P ${de(x.p)} · K ${de(x.c)} · F ${de(x.f)}</span></span><b>${fmtN(x.kcal)}</b></label>`).join('')}</div>
+      <button class="btn acc full" style="margin-top:12px" data-act="claudeSaveMine">Speichern</button>`); return; }
   const d = P.date || S.viewDate, def = curSlot || slotNow(), tot = P.items.reduce((a, x) => ({ k:a.k + x.kcal, p:a.p + x.p }), { k:0, p:0 });
   sheetState = { kind:'clImp', items:P.items, date:d };
   openSheet(`<div class="row"><h2 class="grow">Von Claude einfügen</h2><button class="icon-btn" data-act="closeSheet">✕</button></div>
@@ -1322,7 +1327,7 @@ function renderToday(){
     <div class="row" style="margin-top:10px">${NATIVE() ? `<button class="btn ghost sm grow" data-act="scanCode">▥ Scannen</button>` : `<label class="btn ghost sm grow" style="cursor:pointer">${IC.cam} Foto<input type="file" accept="image/*" id="photoIn" hidden></label>`}<button class="btn ghost sm grow" data-act="manual">${IC.plus} Manuell</button><button class="btn ghost sm grow" data-act="myFoods">${IC.star} Meine</button></div>${NATIVE() ? `<button class="btn acc sm full cl-imp" data-act="claudeImport">📋 Von Claude einfügen</button>` : ''}
     <div id="sugg"></div><div id="quickBusy"></div>`;
   { const mine = myFoodsSorted();
-    h += `<div class="qa-head"><span>Meine Rezepte</span><span class="muted small">${mine.length ? '1× tippen = 1 Portion' : 'aus Zutaten zusammenstellen'}</span></div><div class="qa">${mine.map(({ f, i }) => `<button class="qa-tile" data-act="quickAdd" data-i="${i}"><b>${esc(f.name)}</b><span>${fmtN(f.kcal)} kcal · ${r0(f.p)} g P</span></button>`).join('')}<button class="qa-tile qa-new" data-act="newRecipe">${IC.plus}<span>Neues Rezept</span></button></div>`; }
+    h += `<div class="qa-head"><span>Schnellwahl</span><span class="muted small">${mine.length ? '1× tippen = 1 Portion' : 'aus Zutaten zusammenstellen'}</span></div><div class="qa">${mine.map(({ f, i }) => `<button class="qa-tile" data-act="quickAdd" data-i="${i}"><b>${esc(f.name)}</b><span>${fmtN(f.kcal)} kcal · ${r0(f.p)} g P</span></button>`).join('')}<button class="qa-tile qa-new" data-act="newRecipe">${IC.plus}<span>Neues Rezept</span></button></div>`; }
   const rec = recentFoods();
   if (rec.length) h += `<div style="margin-top:8px"><span class="muted small">Schnell nochmal:</span><br>${rec.map((m,i) => `<span class="chip" data-act="readd" data-i="${i}">${esc(m.name)}</span>`).join('')}</div>`;
   h += `</div>`;
@@ -2037,7 +2042,7 @@ function openSlotAdd(slot){
   openSheet(`<div class="row"><h2 class="grow">${slot === 'Snack' ? 'Snack' : slot} hinzufügen</h2><button class="icon-btn" data-act="closeSheet">✕</button></div>
     <div class="row" style="margin-top:6px"><input id="slotQ" autocomplete="off" placeholder="Suchen oder beschreiben…"><button class="btn acc" data-act="slotEstimate" aria-label="Berechnen">${IC.go}</button></div>
     <div id="slotSugg" data-sugg="1"></div><div id="slotBusy"></div>
-    ${mine.length ? `<div class="qa-head"><span>Meine Rezepte</span><span class="muted small">1× tippen</span></div><div class="qa">${mine.map(({ f, i }) => `<button class="qa-tile" data-act="quickAdd" data-i="${i}"><b>${esc(f.name)}</b><span>${fmtN(f.kcal)} kcal · ${r0(f.p)} g P</span></button>`).join('')}</div>` : ''}
+    ${mine.length ? `<div class="qa-head"><span>Schnellwahl</span><span class="muted small">1× tippen</span></div><div class="qa">${mine.map(({ f, i }) => `<button class="qa-tile" data-act="quickAdd" data-i="${i}"><b>${esc(f.name)}</b><span>${fmtN(f.kcal)} kcal · ${r0(f.p)} g P</span></button>`).join('')}</div>` : ''}
     ${rec.length ? `<div class="qa-head"><span>Zuletzt gegessen</span></div><div>${rec.map((m, i) => `<span class="chip" data-act="readd" data-i="${i}">${esc(m.name)}</span>`).join('')}</div>` : ''}
     <div class="row" style="margin-top:14px">${NATIVE() ? `<button class="btn ghost sm grow" data-act="scanCode">▥ Scannen</button>` : `<label class="btn ghost sm grow" style="cursor:pointer">${IC.cam} Foto<input type="file" accept="image/*" id="photoIn2" hidden></label>`}<button class="btn ghost sm grow" data-act="manual">${IC.plus} Manuell</button><button class="btn ghost sm grow" data-act="newRecipe">${IC.plus} Rezept</button></div>`, true);
   $('#tab-today')._rec = rec;
@@ -2047,7 +2052,7 @@ function openSlotAdd(slot){
 function myFoodsSorted(){
   const cnt = {};
   Object.values(S.days).forEach(d => (d.meals || []).forEach(m => { const k = norm(m.name); cnt[k] = (cnt[k] || 0) + 1; }));
-  return S.myFoods.map((f, i) => ({ f, i, n: cnt[norm(f.name)] || 0 })).filter(x => x.f.type === 'recipe').sort((a,b) => b.n - a.n || a.i - b.i).slice(0, 12);
+  return S.myFoods.map((f, i) => ({ f, i, n: cnt[norm(f.name)] || 0 })).filter(x => x.f.type === 'recipe' || x.f.fav).sort((a,b) => b.n - a.n || a.i - b.i).slice(0, 16);
 }
 function quickAdd(i){
   const f = S.myFoods[i]; if (!f) return;
@@ -2869,6 +2874,9 @@ document.addEventListener('click', e => {
     case 'hcConnect': (async () => { try { await window.FX.health.connect(); } catch {} hcState.granted = await window.FX.health.granted(); renderProfile(); if (hcState.granted) hcSync(false); else toast('Keine Berechtigung erteilt'); })(); break;
     case 'hcSync': hcSync(false); break;
     case 'claudeImport': closeSheet(); claudeImport(); break;
+    case 'claudeSaveMine': { const st = sheetState; if (st?.kind !== 'clSave') break; const on = [...document.querySelectorAll('[data-cl]')].filter(x => x.checked).map(x => +x.dataset.cl);
+      const add = st.items.filter((_, i) => on.includes(i)).map(x => ({ name: x.name, amount: x.amount, kcal: x.kcal, p: x.p, c: x.c, f: x.f, fav: true }));
+      S.myFoods = [...add, ...S.myFoods.filter(f => !add.some(a => a.name === f.name))]; saveMyFoods(); closeSheet(); renderToday(); toast(`★ ${add.length} Lebensmittel gespeichert`); break; }
     case 'claudeImportGo': claudeImport($('#clIn')?.value || ''); break;
     case 'claudeImportSave': { const st = sheetState; if (st?.kind !== 'clImp') break; const sl = $('#clSlot')?.value || 'Snack', on = [...document.querySelectorAll('[data-cl]')].filter(x => x.checked).map(x => +x.dataset.cl);
       const add = st.items.filter((_, i) => on.includes(i)).map(x => ({ id: uid(), name: x.name, amount: x.amount, kcal: x.kcal, p: x.p, c: x.c, f: x.f, slot: x.slot || sl }));
