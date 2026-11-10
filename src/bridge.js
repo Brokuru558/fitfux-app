@@ -5,6 +5,7 @@ import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Browser } from '@capacitor/browser';
 import { FilePicker } from '@capawesome/capacitor-file-picker';
+import { Clipboard } from '@capacitor/clipboard';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Health } from 'capacitor-health';
 
@@ -82,6 +83,7 @@ window.FX = {
     const w = await Filesystem.writeFile({ path: name, data, directory: Directory.Cache, encoding: Encoding.UTF8 });
     await Share.share({ title: name, url: w.uri, dialogTitle: 'Speichern oder teilen' });
   },
+  async readClipboard() { try { const r = await Clipboard.read(); return r.value || ''; } catch { return ''; } },
   async pickText() {
     const r = await FilePicker.pickFiles({ limit: 1, readData: true });
     const f = r.files?.[0]; if (!f?.data) return null;

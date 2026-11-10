@@ -243,6 +243,7 @@ nav.bottom button.on svg{transform:rotate(-8deg) scale(1.1);transition:transform
 html.native [data-tab=coach],html.native [data-act=clearChat]{display:none!important}
 .sugg .src.off,.src.off{background:var(--violet);color:#0e0e12}.off-btn{border-style:dashed!important}
 .card.upd{border-color:var(--lime);background:linear-gradient(135deg,rgba(200,255,0,.16),transparent 70%);animation:bvPop .5s cubic-bezier(.3,1.6,.5,1) both}.upd-ico{font-size:30px;margin-right:10px;display:inline-block;animation:sbRun 1.2s ease-in-out infinite}
+.cl-imp{margin-top:8px;width:100%}.cl-list{display:grid;gap:6px;margin:10px 0}.cl-i{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--card2);font-size:14px}.cl-i span.grow{display:flex;flex-direction:column;flex:1;min-width:0}.cl-i input{width:20px!important;height:20px;flex:none;margin:0;padding:0}
 .card.hc{border-color:rgba(43,210,255,.5)}
 .sport-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 4px}.sport-btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px 14px;border-radius:18px;border:2px solid var(--line);background:var(--card);color:var(--text);font:inherit;text-align:left;position:relative;overflow:hidden;transition:transform .15s}.sport-btn:active{transform:scale(.96)}
 .sport-btn .ico{font-size:26px;line-height:1;margin-bottom:4px;display:inline-block}.sport-btn b{font-size:16px}.sport-btn span:last-child{font-size:12px;color:var(--muted)}
@@ -1247,6 +1248,35 @@ async function offSearchUi(q, boxId = 'sugg'){
   } catch { if (box) box.innerHTML = '<div class="sugg"><div><span class="muted">Keine Verbindung.</span></div></div>'; }
 }
 let offResults = [];
+/* ---------- Import aus Claude-Chat (Code „FITFUX …“) ---------- */
+const SLOT_MAP = { f:'Frühstück', 'frühstück':'Frühstück', fruehstueck:'Frühstück', m:'Mittag', mittag:'Mittag', mittagessen:'Mittag', a:'Abend', abend:'Abend', abendessen:'Abend', s:'Snack', snack:'Snack', snacks:'Snack' };
+function parseClaudeImport(txt){
+  txt = String(txt || '').replace(/^﻿/, '');
+  const out = []; let date = null;
+  const jm = txt.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+  if (jm) { try { let j = JSON.parse(jm[0]); if (!Array.isArray(j)) { date = j.d || j.date || null; j = j.items || j.i || []; }
+    for (const x of j) { const k = num(x.k ?? x.kcal); if (!(x.n || x.name) || !k) continue;
+      out.push({ name: String(x.n || x.name).slice(0, 80), amount: String(x.a || x.amount || ''), kcal: r0(k), p: r1(num(x.p)), c: r1(num(x.c ?? x.kh)), f: r1(num(x.f)), slot: SLOT_MAP[String(x.s || x.slot || '').toLowerCase()] || null }); } } catch {} }
+  if (!out.length) for (const line of txt.split(/\n/)) { const c = line.split(/[|;]/).map(x => x.trim()); if (c.length >= 3 && num(c[2])) out.push({ name: c[0].replace(/^[-•*\s]+/, ''), amount: c[1], kcal: r0(num(c[2])), p: r1(num(c[3])), c: r1(num(c[4])), f: r1(num(c[5])), slot: SLOT_MAP[String(c[6] || '').toLowerCase()] || null }); }
+  if (date && !/^\d{4}-\d\d-\d\d$/.test(date)) date = null;
+  return { items: out, date };
+}
+async function claudeImport(prefill){
+  const txt = prefill ?? (await window.FX?.readClipboard?.()) ?? '';
+  const P = parseClaudeImport(txt);
+  if (!P.items.length) { openSheet(`<div class="row"><h2 class="grow">Von Claude einfügen</h2><button class="icon-btn" data-act="closeSheet">✕</button></div>
+      <p class="muted small">In der Zwischenablage war kein FitFux-Code. Kopiere in Claude den Block, der mit <b>FITFUX</b> beginnt, und füge ihn hier ein:</p>
+      <textarea id="clIn" rows="6" style="width:100%;font-size:12px" placeholder='FITFUX {"items":[…]}'></textarea>
+      <button class="btn acc full" style="margin-top:10px" data-act="claudeImportGo">Prüfen</button>`); return; }
+  const d = P.date || S.viewDate, def = curSlot || slotNow(), tot = P.items.reduce((a, x) => ({ k:a.k + x.kcal, p:a.p + x.p }), { k:0, p:0 });
+  sheetState = { kind:'clImp', items:P.items, date:d };
+  openSheet(`<div class="row"><h2 class="grow">Von Claude einfügen</h2><button class="icon-btn" data-act="closeSheet">✕</button></div>
+    <p class="muted small">${P.items.length} Einträge · <b style="color:var(--lime)">${fmtN(tot.k)} kcal</b> · ${r0(tot.p)} g Eiweiß · ${d === today() ? 'heute' : esc(fmtDate(d))}</p>
+    <div class="cl-list">${P.items.map((x, i) => `<label class="cl-i"><input type="checkbox" checked data-cl="${i}"><span class="grow"><b>${esc(x.name)}</b><span class="muted small">${esc(x.amount)}${x.amount ? ' · ' : ''}P ${de(x.p)} · K ${de(x.c)} · F ${de(x.f)}</span></span><b>${fmtN(x.kcal)}</b></label>`).join('')}</div>
+    <label class="f">Mahlzeit${P.items.some(x => x.slot) ? ' (für Einträge ohne eigene)' : ''}</label>
+    <select id="clSlot">${['Frühstück','Mittag','Abend','Snack'].map(x => `<option${x === def ? ' selected' : ''}>${x}</option>`).join('')}</select>
+    <button class="btn acc full" style="margin-top:12px" data-act="claudeImportSave">Alle eintragen</button>`);
+}
 function renderToday(){
   try { updateDayBar(); } catch (e) {}
   const sec = $('#tab-today'); if (editing(sec)) return;
@@ -1285,7 +1315,7 @@ function renderToday(){
   }
   // Schnell eintragen
   h += `<div class="card"><form class="quick" id="quickForm"><input id="quickText" autocomplete="off" placeholder="Suchen oder beschreiben, z. B. 2 Brötchen mit Käse"><button class="btn acc" type="submit" aria-label="Berechnen">${IC.go}</button></form>
-    <div class="row" style="margin-top:10px">${NATIVE() ? `<button class="btn ghost sm grow" data-act="scanCode">▥ Scannen</button>` : `<label class="btn ghost sm grow" style="cursor:pointer">${IC.cam} Foto<input type="file" accept="image/*" id="photoIn" hidden></label>`}<button class="btn ghost sm grow" data-act="manual">${IC.plus} Manuell</button><button class="btn ghost sm grow" data-act="myFoods">${IC.star} Meine</button></div>
+    <div class="row" style="margin-top:10px">${NATIVE() ? `<button class="btn ghost sm grow" data-act="scanCode">▥ Scannen</button>` : `<label class="btn ghost sm grow" style="cursor:pointer">${IC.cam} Foto<input type="file" accept="image/*" id="photoIn" hidden></label>`}<button class="btn ghost sm grow" data-act="manual">${IC.plus} Manuell</button><button class="btn ghost sm grow" data-act="myFoods">${IC.star} Meine</button></div>${NATIVE() ? `<button class="btn acc sm full cl-imp" data-act="claudeImport">📋 Von Claude einfügen</button>` : ''}
     <div id="sugg"></div><div id="quickBusy"></div>`;
   { const mine = myFoodsSorted();
     h += `<div class="qa-head"><span>Meine Rezepte</span><span class="muted small">${mine.length ? '1× tippen = 1 Portion' : 'aus Zutaten zusammenstellen'}</span></div><div class="qa">${mine.map(({ f, i }) => `<button class="qa-tile" data-act="quickAdd" data-i="${i}"><b>${esc(f.name)}</b><span>${fmtN(f.kcal)} kcal · ${r0(f.p)} g P</span></button>`).join('')}<button class="qa-tile qa-new" data-act="newRecipe">${IC.plus}<span>Neues Rezept</span></button></div>`; }
@@ -2832,6 +2862,11 @@ document.addEventListener('click', e => {
     case 'saveOffMine': { const f = sheetState?.food; if (!f) break; if (!S.myFoods.some(x => x.name === f.name)) { S.myFoods.unshift({ name:f.name, amount:'100 ' + (f.ml ? 'ml' : 'g'), kcal:f.kcal, p:f.p, c:f.c, f:f.f, per100:true, ml:f.ml, code:f.code }); saveMyFoods(); } toast('★ Unter „Meine“ gespeichert'); break; }
     case 'hcConnect': (async () => { try { await window.FX.health.connect(); } catch {} hcState.granted = await window.FX.health.granted(); renderProfile(); if (hcState.granted) hcSync(false); else toast('Keine Berechtigung erteilt'); })(); break;
     case 'hcSync': hcSync(false); break;
+    case 'claudeImport': closeSheet(); claudeImport(); break;
+    case 'claudeImportGo': claudeImport($('#clIn')?.value || ''); break;
+    case 'claudeImportSave': { const st = sheetState; if (st?.kind !== 'clImp') break; const sl = $('#clSlot')?.value || 'Snack', on = [...document.querySelectorAll('[data-cl]')].filter(x => x.checked).map(x => +x.dataset.cl);
+      const add = st.items.filter((_, i) => on.includes(i)).map(x => ({ id: uid(), name: x.name, amount: x.amount, kcal: x.kcal, p: x.p, c: x.c, f: x.f, slot: x.slot || sl }));
+      if (!add.length) { toast('Nichts ausgewählt'); break; } addMeals(st.date, add); closeSheet(); renderToday(); toast(`${add.length} Einträge · ${fmtN(add.reduce((a, x) => a + x.kcal, 0))} kcal eingetragen`); break; }
     case 'pasteBackup': openPasteBackup(); break;
     case 'pickBackup': (async () => { try { const t = await window.FX.pickText(); if (t) restoreFromText(t); } catch (e) { if (!/cancel/i.test(String(e?.message || e))) toast('Datei konnte nicht gelesen werden: ' + String(e?.message || e).slice(0, 60)); } })(); break;
     case 'pasteGo': restoreFromText($('#pasteIn')?.value); break;
