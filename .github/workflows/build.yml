@@ -22,20 +22,24 @@ jobs:
         env:
           KS: ${{ secrets.FITFUX_KEYSTORE_B64 }}
         run: |
-          if [ -z "$KS" ]; then echo "::error::Secret FITFUX_KEYSTORE_B64 fehlt – siehe README"; exit 1; fi
-          mkdir -p signing && echo "$KS" | base64 -d > signing/fitfux.jks
+          if [ -z "$KS" ]; then echo "::warning::Secret FITFUX_KEYSTORE_B64 fehlt – baue nur Test-APK"; echo "SIGNED=0" >> $GITHUB_ENV; exit 0; fi
+          mkdir -p signing && echo "$KS" | base64 -d > signing/fitfux.jks && echo "SIGNED=1" >> $GITHUB_ENV
       - name: APK bauen
         working-directory: android
         env:
           FITFUX_KS_PASS: ${{ secrets.FITFUX_KS_PASS }}
-        run: chmod +x gradlew && ./gradlew assembleRelease --no-daemon
+        run: |
+          chmod +x gradlew
+          if [ "$SIGNED" = "1" ]; then ./gradlew assembleRelease --no-daemon; else ./gradlew assembleDebug --no-daemon; fi
       - name: Umbenennen
-        run: cp android/app/build/outputs/apk/release/app-release.apk FitFux-${{ github.run_number }}.apk
+        run: |
+          if [ "$SIGNED" = "1" ]; then cp android/app/build/outputs/apk/release/app-release.apk FitFux-${{ github.run_number }}.apk; else cp android/app/build/outputs/apk/debug/app-debug.apk FitFux-${{ github.run_number }}-TEST.apk; fi
       - uses: actions/upload-artifact@v4
         with:
           name: FitFux-${{ github.run_number }}
-          path: FitFux-${{ github.run_number }}.apk
+          path: FitFux-*.apk
       - name: Release veröffentlichen
+        if: env.SIGNED == '1'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}

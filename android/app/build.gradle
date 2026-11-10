@@ -25,7 +25,6 @@ android {
         }
     }
     buildTypes {
-        debug { signingConfig signingConfigs.fitfux }
         release {
             signingConfig signingConfigs.fitfux
             minifyEnabled false
