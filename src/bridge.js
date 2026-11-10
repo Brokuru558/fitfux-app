@@ -4,6 +4,7 @@ import { App } from '@capacitor/app';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Browser } from '@capacitor/browser';
+import { FilePicker } from '@capawesome/capacitor-file-picker';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Health } from 'capacitor-health';
 
@@ -80,6 +81,12 @@ window.FX = {
   async saveFile(name, data, mime = 'application/json') {
     const w = await Filesystem.writeFile({ path: name, data, directory: Directory.Cache, encoding: Encoding.UTF8 });
     await Share.share({ title: name, url: w.uri, dialogTitle: 'Speichern oder teilen' });
+  },
+  async pickText() {
+    const r = await FilePicker.pickFiles({ limit: 1, readData: true });
+    const f = r.files?.[0]; if (!f?.data) return null;
+    const bin = atob(f.data), bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder('utf-8').decode(bytes);
   },
   async appInfo() { try { return await App.getInfo(); } catch { return { version: '', build: '0' }; } },
   async latestRelease() {

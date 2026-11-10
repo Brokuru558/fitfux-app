@@ -1626,7 +1626,7 @@ function renderProfile(){
     ${hcCard()}${NATIVE() ? `<div class="card"><div class="row"><h3 class="grow">App-Version</h3><span class="muted small">${esc(appUpd.version || '?')} (${appUpd.build || '?'})</span></div>${appUpd.latest ? `<p class="small" style="margin:8px 0">Neu: <b>${esc(appUpd.latest.tag)}</b></p><button class="btn acc full" data-act="doUpdate">Update laden</button>` : `<button class="btn ghost sm" style="margin-top:8px" data-act="checkUpd">Nach Updates suchen</button>`}${appUpd.err ? `<p class="muted small" style="margin:6px 0 0">${esc(appUpd.err)}</p>` : ''}</div>` : ''}
     <div class="card"><h3>Daten & Backup</h3><p class="muted small">${NATIVE() ? 'Deine Daten liegen auf diesem Handy. Speichere ab und zu ein Backup (z. B. in Google Drive), falls du das Handy wechselst.' : LOCAL ? 'Offline-Modus: Daten liegen nur in diesem Browser – bitte Backup speichern!' : 'Deine Daten liegen privat in deinem Claude-Konto. Ein Backup schützt sie zusätzlich, z. B. falls die App mal gelöscht wird.'}</p>
     <div class="row wrap"><button class="btn sm acc" data-act="backup">Backup speichern</button><button class="btn sm ghost" data-act="csvFood">Essen als CSV</button><button class="btn sm ghost" data-act="csvDays">Tage als CSV</button><button class="btn sm ghost" data-act="csvTrain">Training als CSV</button></div>
-    <label class="btn sm ghost" style="margin-top:8px;cursor:pointer">Backup laden<input type="file" accept=".json,application/json" id="restoreIn" hidden></label>
+    ${NATIVE() ? `<button class="btn sm ghost" style="margin-top:8px" data-act="pickBackup">Backup laden</button>` : `<label class="btn sm ghost" style="margin-top:8px;cursor:pointer">Backup laden<input type="file" accept=".json,application/json" id="restoreIn" hidden></label>`} <button class="btn sm ghost" style="margin-top:8px" data-act="pasteBackup">Backup einfügen</button>
     <p class="muted small" style="margin-top:10px;opacity:.75">Nährwerte: Schweizer Nährwertdatenbank V6.1, Bundesamt für Lebensmittelsicherheit und Veterinärwesen (BLV), naehrwertdaten.ch · Übungsfotos: Free Exercise DB (Public Domain)</p>
     <div class="row" style="margin:14px 0 10px"><span class="grow small">Darstellung</span><button class="btn sm ${theme() === 'dark' ? 'acc' : 'ghost'}" data-act="theme" data-v="dark">Nacht</button><button class="btn sm ${theme() === 'light' ? 'acc' : 'ghost'}" data-act="theme" data-v="light">Creme</button></div>
     <button class="btn ghost sm" data-act="clearChat">Coach-Verlauf löschen</button></div>`;
@@ -2477,16 +2477,23 @@ async function exportCsv(kind){
   await saveFile(`FitFux-${{ food:'Essen', days:'Tage', train:'Training' }[kind]}-${today()}.csv`, toCsv(rows));
 }
 let pendingRestore = null;
-async function restoreBackup(file){
+async function restoreBackup(file){ return restoreFromText(await file.text()); }
+function openPasteBackup(){
+  openSheet(`<div class="row"><h2 class="grow">Backup einfügen</h2><button class="icon-btn" data-act="closeSheet">✕</button></div>
+    <p class="muted small">Backup-Datei mit einem Text-Editor öffnen, alles kopieren und hier einfügen.</p>
+    <textarea id="pasteIn" rows="8" style="width:100%;font-size:12px" placeholder='{"app":"FitFux", …}'></textarea>
+    <button class="btn acc full" style="margin-top:10px" data-act="pasteGo">Prüfen</button>`);
+}
+async function restoreFromText(txt){
   try {
-    const d = JSON.parse(await file.text());
+    const d = JSON.parse(String(txt || '').replace(/^\uFEFF/, '').trim());
     if (d.app !== 'FitFux' || typeof d.days !== 'object') throw 0;
     pendingRestore = d;
     openSheet(`<div class="row"><h2 class="grow">Backup laden</h2><button class="icon-btn" data-act="closeSheet">✕</button></div>
       <p class="small">Backup vom ${esc(new Date(d.exportedAt).toLocaleString('de-DE'))}: ${Object.keys(d.days).length} Tage, ${(d.workouts || []).length} Trainings, ${(d.weights || []).length} Gewichtseinträge.</p>
       <p class="muted small">Einträge aus dem Backup überschreiben gleiche Tage/Trainings. Alles andere bleibt erhalten.</p>
       <button class="btn acc full" data-act="doRestore">Wiederherstellen</button>`);
-  } catch { toast('Das ist kein FitFux-Backup'); }
+  } catch (e) { toast('Das ist kein FitFux-Backup'); console.warn('restore', e); }
 }
 async function doRestore(){
   const d = pendingRestore; if (!d) return; closeSheet(); toast('Stelle wieder her…');
@@ -2825,6 +2832,9 @@ document.addEventListener('click', e => {
     case 'saveOffMine': { const f = sheetState?.food; if (!f) break; if (!S.myFoods.some(x => x.name === f.name)) { S.myFoods.unshift({ name:f.name, amount:'100 ' + (f.ml ? 'ml' : 'g'), kcal:f.kcal, p:f.p, c:f.c, f:f.f, per100:true, ml:f.ml, code:f.code }); saveMyFoods(); } toast('★ Unter „Meine“ gespeichert'); break; }
     case 'hcConnect': (async () => { try { await window.FX.health.connect(); } catch {} hcState.granted = await window.FX.health.granted(); renderProfile(); if (hcState.granted) hcSync(false); else toast('Keine Berechtigung erteilt'); })(); break;
     case 'hcSync': hcSync(false); break;
+    case 'pasteBackup': openPasteBackup(); break;
+    case 'pickBackup': (async () => { try { const t = await window.FX.pickText(); if (t) restoreFromText(t); } catch (e) { if (!/cancel/i.test(String(e?.message || e))) toast('Datei konnte nicht gelesen werden: ' + String(e?.message || e).slice(0, 60)); } })(); break;
+    case 'pasteGo': restoreFromText($('#pasteIn')?.value); break;
     case 'checkUpd': checkUpdate(true); break;
     case 'doUpdate': if (appUpd.latest) window.FX.openUrl(appUpd.latest.url); break;
     case 'skipUpdate': try { localStorage.setItem('fitfux:skipUpd', appUpd.latest?.tag || ''); } catch {} renderToday(); break;
