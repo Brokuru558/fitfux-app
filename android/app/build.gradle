@@ -7,8 +7,8 @@ android {
         applicationId "de.asteroidpower.fitfux"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger()
-        versionName "1.0." + (System.getenv("GITHUB_RUN_NUMBER") ?: "0")
+        versionCode = Integer.parseInt(System.getenv("GITHUB_RUN_NUMBER") ?: "1")
+        versionName = "1.0." + (System.getenv("GITHUB_RUN_NUMBER") ?: "0")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,17 +16,18 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    def ksPass = System.getenv('FITFUX_KS_PASS')
     signingConfigs {
         fitfux {
             storeFile file('../../signing/fitfux.jks')
-            storePassword System.getenv('FITFUX_KS_PASS')
+            storePassword ksPass ?: ''
             keyAlias 'fitfux'
-            keyPassword System.getenv('FITFUX_KS_PASS')
+            keyPassword ksPass ?: ''
         }
     }
     buildTypes {
         release {
-            signingConfig signingConfigs.fitfux
+            if (ksPass) signingConfig signingConfigs.fitfux
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
