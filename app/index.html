@@ -1228,7 +1228,7 @@ function hcCard(){
   return `<div class="card hc"><div class="row"><h3 class="grow">Garmin · Health Connect</h3>${hcState.granted ? '<span class="pill" style="background:var(--lime);color:#0e0e12">verbunden</span>' : ''}</div>
     ${!hcState.avail ? `<p class="muted small">Health Connect ist auf diesem Handy nicht aktiv.</p><button class="btn ghost sm" data-act="hcInstall">Health Connect öffnen</button>`
       : hcState.granted ? `<p class="muted small" style="margin:6px 0 10px">Schritte, Läufe, Fußball & andere Aktivitäten sowie dein Gewicht kommen automatisch – jedes Mal, wenn du FitFux öffnest. Krafttraining von der Uhr wird übersprungen, das trägst du hier ein.${hcState.last ? `<br>Zuletzt: ${esc(hcState.last)}` : ''}</p><div class="row" style="gap:8px"><button class="btn acc sm grow" data-act="hcSync">Jetzt synchronisieren</button><button class="btn ghost sm" data-act="hcSettings">Berechtigungen</button></div>`
-      : `<p class="muted small" style="margin:6px 0 10px">Hol dir Schritte und Aktivitäten automatisch von deiner Garmin. Dafür in Garmin Connect einmal einschalten: <b>Einstellungen → Verbundene Apps → Health Connect</b> (Schreiben erlauben). Dann hier verbinden.</p><button class="btn acc full" data-act="hcConnect">Mit Health Connect verbinden</button>`}
+      : `<p class="muted small" style="margin:6px 0 10px">Hol dir Schritte und Aktivitäten automatisch von deiner Garmin. Dafür in Garmin Connect einmal einschalten: <b>Einstellungen → Verbundene Apps → Health Connect</b> (Schreiben erlauben). Dann hier verbinden.</p><button class="btn acc full" data-act="hcConnect">Mit Health Connect verbinden</button><button class="btn ghost sm" style="margin-top:8px" data-act="hcSettings">Health Connect öffnen</button>`}
   </div>`;
 }
 async function scanCode(){
@@ -2917,7 +2917,7 @@ document.addEventListener('click', e => {
     case 'offSearch': offSearchUi(a.dataset.q, a.dataset.box); break;
     case 'pickOff': { const f = offResults[+a.dataset.i]; if (f) openGramSheet(f); break; }
     case 'saveOffMine': { const f = sheetState?.food; if (!f) break; if (!S.myFoods.some(x => x.name === f.name)) { S.myFoods.unshift({ name:f.name, amount:'100 ' + (f.ml ? 'ml' : 'g'), kcal:f.kcal, p:f.p, c:f.c, f:f.f, per100:true, ml:f.ml, code:f.code }); saveMyFoods(); } toast('★ Unter „Meine“ gespeichert'); break; }
-    case 'hcConnect': (async () => { try { await window.FX.health.connect(); } catch {} hcState.granted = await window.FX.health.granted(); renderProfile(); if (hcState.granted) hcSync(false); else toast('Keine Berechtigung erteilt'); })(); break;
+    case 'hcConnect': (async () => { let ok = false; try { ok = await window.FX.health.connect(); } catch (e) { console.warn(e); } hcState.granted = ok || await window.FX.health.granted(); renderProfile(); if (hcState.granted) hcSync(false); else toast('Keine Berechtigung – unter „Berechtigungen“ in Health Connect FitFux erlauben'); })(); break;
     case 'hcSync': hcSync(false); break;
     case 'claudeImport': closeSheet(); claudeImport(); break;
     case 'claudeImportSlot': { const keep = curSlot; closeSheet(); curSlot = keep; claudeImport(); break; }

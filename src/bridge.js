@@ -58,9 +58,9 @@ window.FX = {
   },
   health: {
     async available() { if (!native) return false; try { return (await Health.isHealthAvailable()).available; } catch { return false; } },
-    async connect() { return Health.requestHealthPermissions({ permissions: HC_PERMS }); },
+    async connect() { const r = await Health.requestHealthPermissions({ permissions: HC_PERMS }); const p = r?.permissions || {}; const m = Array.isArray(p) ? Object.assign({}, ...p) : p; return !!(m.READ_STEPS || m.READ_WORKOUTS); },
     async granted() {
-      try { const r = await Health.checkHealthPermissions({ permissions: HC_PERMS }); const m = Object.assign({}, ...(r.permissions || [])); return !!m.READ_STEPS; } catch { return false; }
+      try { const r = await Health.checkHealthPermissions({ permissions: HC_PERMS }); const p = r.permissions || {}; const m = Array.isArray(p) ? Object.assign({}, ...p) : p; return !!(m.READ_STEPS || m.READ_WORKOUTS); } catch (e) { console.warn('hc check', e); return false; }
     },
     openSettings() { return Health.openHealthConnectSettings(); },
     install() { return Health.showHealthConnectInPlayStore(); },
