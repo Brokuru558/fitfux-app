@@ -1403,7 +1403,9 @@ function renderToday(){
 /* ---------- Wochenplan ---------- */
 const WD = ['Mo','Di','Mi','Do','Fr','Sa','So'];
 const DEF_SCHED = { 2:[0,3], 3:[0,2,4], 4:[0,1,3,4], 5:[0,1,2,4,5], 6:[0,1,2,3,4,5] };
-let weekOff = 0, trainSel = null, daySel = {}, dayPick = {};
+let weekOff = 0, trainSel = null, daySel = {};
+const dayPickGet = d => { const v = S.profile?.dayPick?.[d]; return v == null ? null : v; };
+function dayPickSet(d, v){ if (!S.profile) return; const m = { ...(S.profile.dayPick || {}) }; const cut = addDays(today(), -14); for (const k of Object.keys(m)) if (k < cut) delete m[k]; if (v === undefined) delete m[d]; else m[d] = v; S.profile = { ...S.profile, dayPick: m }; saveProfile(); }
 function schedule(){ const s2 = S.profile?.schedule; return Array.isArray(s2) && s2.length ? [...s2].sort() : (DEF_SCHED[num(S.profile?.trainDays) || 3] || [0,2,4]); }
 function mondayOf(dateStr){ const [y,m,d] = dateStr.split('-').map(Number); const x = new Date(y, m-1, d); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return dstr(x); }
 function weekNo(mon){ return Math.round(new Date(mon).getTime() / (7 * 864e5)); }
@@ -1443,7 +1445,7 @@ function smartWeek(mon){
   return (smartCache[key] = out);
 }
 function plannedFor(date){
-  if (dayPick[date] != null) return dayPick[date] < 0 ? null : dayPick[date];
+  { const dp = dayPickGet(date); if (dp != null) return dp < 0 ? null : dp; }
   if (!S.plan?.days?.length) return null;
   if ((S.profile?.scheduleMode || 'smart') === 'smart') { if (date < today()) return null; const r = smartWeek(mondayOf(date))[date]; return r == null ? null : r; }
   const wd = (new Date(date).getDay() + 6) % 7, sch = schedule(), k = sch.indexOf(wd);
@@ -1482,7 +1484,7 @@ function renderTrain(){
   } else {
     if (pi == null && !wk.length && gfx('bg:rest')) h += `<img class="gfx-banner" src="${gfx('bg:rest')}" alt="">`;
     h += `<div class="row" style="margin-top:${wk.length ? 14 : 8}px"><span class="muted small grow">${pi != null ? (wk.length ? 'Weitere Empfehlung' : 'Empfohlen für diesen Tag') : 'Ruhetag – Erholung gehört zum Plan.'}</span>
-      <select id="dayPickSel" style="width:auto;padding:6px 8px;font-size:13px"><option value="-1" ${pi == null ? 'selected' : ''}>Ruhetag</option>${S.plan.days.map((x, j) => `<option value="${j}" ${pi === j ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select></div>`;
+      <select id="dayPickSel" style="width:auto;padding:6px 8px;font-size:13px">${dayPickGet(trainSel) != null ? '<option value="auto">↺ wie geplant</option>' : ''}<option value="-1" ${pi == null ? 'selected' : ''}>Ruhetag</option>${S.plan.days.map((x, j) => `<option value="${j}" ${pi === j ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select></div>`;
     if (pi != null) {
       const pd = S.plan.days[pi], sel = daySel[d + ':' + pi] || pd.exercises.map((_, j) => j);
       h += `<div style="margin-top:8px">${pd.exercises.map((e, ei) => { const on = sel.includes(ei); return `<div class="planex small${on ? '' : ' off'}"><button class="tgl${on ? ' on' : ''}" data-act="togEx" data-k="${d}:${pi}" data-e="${ei}" aria-label="An/aus"></button><span class="row grow" style="gap:10px" data-act="exInfo" data-d="${pi}" data-e="${ei}">${exImg(e.name, true)}<span class="grow">${esc(e.name)}${unavailable().includes(e.name) ? ' <span class="pill" style="background:var(--orange);color:var(--onacc)">nicht da</span>' : ''}</span></span><span class="muted" style="white-space:nowrap">${esc(e.sets)}× ${esc(e.reps)}</span></div>`; }).join('')}</div>
@@ -1720,7 +1722,7 @@ function renderProfile(){
 }
 function formProfile(f){
   const fd = new FormData(f), g = k => fd.get(k);
-  return { sex: g('sex'), age: num(g('age')), height: num(g('height')), weight: num(g('weight')), activity: g('activity'), goal: g('goal'),
+  return { ...(S.profile || {}), sex: g('sex'), age: num(g('age')), height: num(g('height')), weight: num(g('weight')), activity: g('activity'), goal: g('goal'),
     budgetMode: g('budgetMode') || 'daily', deficit: num(g('deficit')), surplus: num(g('surplus')), pkg: num(g('pkg')), fatPct: num(g('fatPct')), eatBack: g('eatBack') === 'on',
     trainDays: num(g('trainDays')), sessionLen: num(g('sessionLen')), experience: g('experience'), equip: g('equip'), focus: fd.getAll('focus'),
     stepGoal: num(S.profile?.stepGoal) || 8000, unavailable: S.profile?.unavailable || [], schedule: S.profile?.schedule, scheduleMode: S.profile?.scheduleMode, footballDay: S.profile?.footballDay,
@@ -2866,7 +2868,7 @@ document.addEventListener('click', e => {
     case 'schedEdit': schedBox(); break;
     case 'schedMode': { if (!S.profile) break; S.profile.scheduleMode = a.dataset.m; if (a.dataset.m === 'fixed' && !S.profile.schedule) S.profile.schedule = schedule(); saveProfile(); renderTrain(); schedBox(true); break; }
     case 'fbDay': { if (!S.profile) break; S.profile.footballDay = +a.dataset.w; saveProfile(); renderTrain(); schedBox(true); break; }
-    case 'schedTog': { if (!S.profile) break; S.profile.scheduleMode = 'fixed'; const w = +a.dataset.w, cur = schedule(); const nx = cur.includes(w) ? cur.filter(x => x !== w) : [...cur, w]; if (!nx.length) break; S.profile.schedule = nx.sort(); saveProfile(); renderTrain(); schedBox(); break; }
+    case 'schedTog': { if (!S.profile) break; S.profile.scheduleMode = 'fixed'; const w = +a.dataset.w, cur = schedule(); const nx = cur.includes(w) ? cur.filter(x => x !== w) : [...cur, w]; if (!nx.length) break; S.profile.schedule = nx.sort((x, y) => x - y); saveProfile(); renderTrain(); schedBox(true); toast('Trainingstage gespeichert'); break; }
     case 'delWorkout': { const id = a.dataset.id; S.workouts = S.workouts.filter(w => w.id !== id); del('workouts/' + id); closeSheet(); renderTrain(); toast('Gelöscht'); break; }
     case 'delWeight': { S.weights = S.weights.filter(w => w.date !== a.dataset.d); saveWeights(); renderProgress(); break; }
     case 'chip': { const t = a.dataset.t; if (t.endsWith(': ')) { $('#chatIn').value = t; $('#chatIn').focus(); } else sendChat(t); break; }
@@ -2959,7 +2961,7 @@ document.addEventListener('click', e => {
     case 'rcSave': saveRecipe(); break;
     case 'rcRemove': { if (a.dataset.sure) { S.myFoods.splice(rc.idx, 1); saveMyFoods(); rc = null; closeSheet(); renderToday(); toast('Rezept gelöscht'); } else { a.dataset.sure = 1; a.textContent = 'Wirklich löschen?'; } break; }
     case 'fitti': openFitti(); break;
-    case 'fxTrain': { dayPick[today()] = +a.dataset.i; openStart(today()); break; }
+    case 'fxTrain': { dayPickSet(today(), +a.dataset.i); openStart(today()); break; }
     case 'fxTrainAny': { openStart(today()); break; }
     case 'fxMeal': { closeSheet(); S.viewDate = today(); goto('today'); setTimeout(() => { const q = $('#quickText'); q?.scrollIntoView({ block:'center' }); q?.focus(); }, 100); break; }
     case 'fxSteps': { S.viewDate = today(); openStepsSheet(); break; }
@@ -2998,8 +3000,9 @@ document.addEventListener('change', e => {
   if ((t.id === 'garminIn' || t.id === 'garminIn2') && t.files?.[0]) { S.viewDate = t.id === 'garminIn2' ? today() : S.viewDate; importGarmin(t.files[0]); t.value = ''; }
   if (t.id === 'actType') updActHint();
   if (t.closest('#profileForm')) updProfilePreview();
-  if (t.id === 'dayPickSel') { dayPick[trainSel] = +t.value; renderTrain(); }
-  if (t.id === 'startDaySel' && startSt) { const v = +t.value; dayPick[startSt.date] = v; openStart(startSt.date); }
+  if (t.id === 'dayPickSel' && t.value === 'auto') { dayPickSet(trainSel, undefined); renderTrain(); toast('Wieder wie geplant'); }
+  else if (t.id === 'dayPickSel') { dayPickSet(trainSel, +t.value); renderTrain(); toast(+t.value < 0 ? 'Ruhetag gespeichert' : 'Für diesen Tag gespeichert'); }
+  if (t.id === 'startDaySel' && startSt) { const v = +t.value; dayPickSet(startSt.date, v); openStart(startSt.date); }
   if (t.id === 'unavChk' && exCtx) {
     const ex = exCtx.draft ? draft.exercises[exCtx.e] : S.plan.days[exCtx.d].exercises[exCtx.e];
     if (!S.profile) { toast('Bitte zuerst Profil anlegen'); t.checked = false; return; }
