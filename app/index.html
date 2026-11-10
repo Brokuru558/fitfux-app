@@ -1251,7 +1251,7 @@ let offResults = [];
 /* ---------- Import aus Claude-Chat (Code „FITFUX …“) ---------- */
 const SLOT_MAP = { f:'Frühstück', 'frühstück':'Frühstück', fruehstueck:'Frühstück', m:'Mittag', mittag:'Mittag', mittagessen:'Mittag', a:'Abend', abend:'Abend', abendessen:'Abend', s:'Snack', snack:'Snack', snacks:'Snack' };
 function parseClaudeImport(txt){
-  txt = String(txt || '').replace(/^﻿/, '');
+  txt = String(txt || '').replace(/^\uFEFF/, '').replace(/[\u201C\u201D\u201E\u201F\u2033\u00AB\u00BB]/g, '"').replace(/[\u2018\u2019\u201A]/g, "'").replace(/\u00A0/g, ' ');
   const out = []; let date = null;
   const jm = txt.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
   if (jm) { try { let j = JSON.parse(jm[0]); if (!Array.isArray(j)) { date = j.d || j.date || null; j = j.items || j.i || []; }
@@ -1262,7 +1262,8 @@ function parseClaudeImport(txt){
   return { items: out, date };
 }
 async function claudeImport(prefill){
-  const txt = prefill ?? (await window.FX?.readClipboard?.()) ?? '';
+  let txt = prefill ?? (await window.FX?.readClipboard?.()) ?? '';
+  if (!prefill && !/FITFUX|items/.test(txt)) { try { txt = (await navigator.clipboard.readText()) || txt; } catch {} }
   const P = parseClaudeImport(txt);
   if (!P.items.length) { openSheet(`<div class="row"><h2 class="grow">Von Claude einfügen</h2><button class="icon-btn" data-act="closeSheet">✕</button></div>
       <p class="muted small">In der Zwischenablage war kein FitFux-Code. Kopiere in Claude den Block, der mit <b>FITFUX</b> beginnt, und füge ihn hier ein:</p>
