@@ -1277,11 +1277,11 @@ async function claudeImport(prefill){
       <div class="cl-list">${P.items.map((x, i) => `<label class="cl-i"><input type="checkbox" checked data-cl="${i}"><span class="grow"><b>${esc(x.name)}</b><span class="muted small">${esc(x.amount)} · P ${de(x.p)} · K ${de(x.c)} · F ${de(x.f)}</span></span><b>${fmtN(x.kcal)}</b></label>`).join('')}</div>
       <button class="btn acc full" style="margin-top:12px" data-act="claudeSaveMine">Speichern</button>`); return; }
   const d = P.date || S.viewDate, def = curSlot || slotNow(), tot = P.items.reduce((a, x) => ({ k:a.k + x.kcal, p:a.p + x.p }), { k:0, p:0 });
-  sheetState = { kind:'clImp', items:P.items, date:d };
+  sheetState = { kind:'clImp', items:P.items, date:d, forced: !!curSlot };
   openSheet(`<div class="row"><h2 class="grow">Von Claude einfügen</h2><button class="icon-btn" data-act="closeSheet">✕</button></div>
     <p class="muted small">${P.items.length} Einträge · <b style="color:var(--lime)">${fmtN(tot.k)} kcal</b> · ${r0(tot.p)} g Eiweiß · ${d === today() ? 'heute' : esc(fmtDate(d))}</p>
     <div class="cl-list">${P.items.map((x, i) => `<label class="cl-i"><input type="checkbox" checked data-cl="${i}"><span class="grow"><b>${esc(x.name)}</b><span class="muted small">${esc(x.amount)}${x.amount ? ' · ' : ''}P ${de(x.p)} · K ${de(x.c)} · F ${de(x.f)}</span></span><b>${fmtN(x.kcal)}</b></label>`).join('')}</div>
-    <label class="f">Mahlzeit${P.items.some(x => x.slot) ? ' (für Einträge ohne eigene)' : ''}</label>
+    <label class="f">Mahlzeit${P.items.some(x => x.slot) && !curSlot ? ' (für Einträge ohne eigene)' : ''}</label>
     <select id="clSlot">${['Frühstück','Mittag','Abend','Snack'].map(x => `<option${x === def ? ' selected' : ''}>${x}</option>`).join('')}</select>
     <label class="cl-save"><input type="checkbox" id="clKeep"><span>★ Als Schnellwahl speichern – künftig 1 Tipp</span></label>
     <input id="clName" value="${esc(P.items.length === 1 ? P.items[0].name : P.items.slice(0, 2).map(x => x.name.split(' (')[0]).join(' + ') + (P.items.length > 2 ? ' …' : ''))}" placeholder="Name, z. B. Toast-Mittag" style="display:none;margin-top:6px">
@@ -2090,7 +2090,7 @@ function openSlotAdd(slot){
     <div id="slotSugg" data-sugg="1"></div><div id="slotBusy"></div>
     ${mine.length ? `<div class="qa-head"><span>Schnellwahl</span><span class="muted small">1× tippen</span></div><div class="qa">${mine.map(({ f, i }) => `<button class="qa-tile" data-act="quickAdd" data-i="${i}"><b>${esc(f.name)}</b><span>${fmtN(f.kcal)} kcal · ${r0(f.p)} g P</span></button>`).join('')}</div>` : ''}
     ${rec.length ? `<div class="qa-head"><span>Zuletzt gegessen</span></div><div>${rec.map((m, i) => `<span class="chip" data-act="readd" data-i="${i}">${esc(m.name)}</span>`).join('')}</div>` : ''}
-    <div class="row" style="margin-top:14px">${NATIVE() ? `<button class="btn ghost sm grow" data-act="scanCode">▥ Scannen</button>` : `<label class="btn ghost sm grow" style="cursor:pointer">${IC.cam} Foto<input type="file" accept="image/*" id="photoIn2" hidden></label>`}<button class="btn ghost sm grow" data-act="manual">${IC.plus} Manuell</button><button class="btn ghost sm grow" data-act="newRecipe">${IC.plus} Rezept</button></div>`, true);
+    <div class="row" style="margin-top:14px">${NATIVE() ? `<button class="btn ghost sm grow" data-act="scanCode">▥ Scannen</button>` : `<label class="btn ghost sm grow" style="cursor:pointer">${IC.cam} Foto<input type="file" accept="image/*" id="photoIn2" hidden></label>`}<button class="btn ghost sm grow" data-act="manual">${IC.plus} Manuell</button><button class="btn ghost sm grow" data-act="newRecipe">${IC.plus} Rezept</button></div>${NATIVE() ? `<button class="btn acc sm full cl-imp" data-act="claudeImportSlot">📋 Von Claude einfügen</button>` : ''}`, true);
   $('#tab-today')._rec = rec;
 }
 
@@ -2920,12 +2920,13 @@ document.addEventListener('click', e => {
     case 'hcConnect': (async () => { try { await window.FX.health.connect(); } catch {} hcState.granted = await window.FX.health.granted(); renderProfile(); if (hcState.granted) hcSync(false); else toast('Keine Berechtigung erteilt'); })(); break;
     case 'hcSync': hcSync(false); break;
     case 'claudeImport': closeSheet(); claudeImport(); break;
+    case 'claudeImportSlot': { const keep = curSlot; closeSheet(); curSlot = keep; claudeImport(); break; }
     case 'claudeSaveMine': { const st = sheetState; if (st?.kind !== 'clSave') break; const on = [...document.querySelectorAll('[data-cl]')].filter(x => x.checked).map(x => +x.dataset.cl);
       const add = st.items.filter((_, i) => on.includes(i)).map(x => ({ name: x.name, amount: x.amount, kcal: x.kcal, p: x.p, c: x.c, f: x.f, fav: true }));
       S.myFoods = [...add, ...S.myFoods.filter(f => !add.some(a => a.name === f.name))]; saveMyFoods(); closeSheet(); renderToday(); toast(`★ ${add.length} Lebensmittel gespeichert`); break; }
     case 'claudeImportGo': claudeImport($('#clIn')?.value || ''); break;
     case 'claudeImportSave': { const st = sheetState; if (st?.kind !== 'clImp') break; const sl = $('#clSlot')?.value || 'Snack', on = [...document.querySelectorAll('[data-cl]')].filter(x => x.checked).map(x => +x.dataset.cl);
-      const add = st.items.filter((_, i) => on.includes(i)).map(x => ({ id: uid(), name: x.name, amount: x.amount, kcal: x.kcal, p: x.p, c: x.c, f: x.f, slot: x.slot || sl }));
+      const add = st.items.filter((_, i) => on.includes(i)).map(x => ({ id: uid(), name: x.name, amount: x.amount, kcal: x.kcal, p: x.p, c: x.c, f: x.f, slot: st.forced ? sl : (x.slot || sl) }));
       if (!add.length) { toast('Nichts ausgewählt'); break; }
       let saved = '';
       if ($('#clKeep')?.checked) { const nm = ($('#clName')?.value || '').trim() || add[0].name, sum = k => r1(add.reduce((a, x) => a + num(x[k]), 0));
