@@ -1,0 +1,11 @@
+{
+  "appId": "de.asteroidpower.fitfux",
+  "appName": "FitFux",
+  "webDir": "www",
+  "backgroundColor": "#0e0e12",
+  "android": { "allowMixedContent": false },
+  "plugins": {
+    "SystemBars": { "insetsHandling": "native", "style": "DARK" },
+    "CapacitorHttp": { "enabled": false }
+  }
+}

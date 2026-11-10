@@ -1,0 +1,23 @@
+{
+  "name": "fitfux-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "bridge": "esbuild src/bridge.js --bundle --format=iife --outfile=www/bridge.js --minify",
+    "build": "npm run bridge && node scripts/prepare-www.mjs"
+  },
+  "dependencies": {
+    "@capacitor-mlkit/barcode-scanning": "^8.2.2",
+    "@capacitor/android": "8.6.0",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/core": "8.6.0",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/share": "^8.0.3",
+    "capacitor-health": "8.4.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^4.0.0",
+    "@capacitor/cli": "8.6.0",
+    "esbuild": "^0.25.0"
+  }
+}

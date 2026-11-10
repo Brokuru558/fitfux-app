@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FitFux</string>
+    <string name="title_activity_main">FitFux</string>
+    <string name="package_name">de.asteroidpower.fitfux</string>
+    <string name="custom_url_scheme">de.asteroidpower.fitfux</string>
+</resources>

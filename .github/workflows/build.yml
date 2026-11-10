@@ -1,0 +1,44 @@
+name: APK bauen
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync android
+      - name: Signierschlüssel aus Secrets
+        env:
+          KS: ${{ secrets.FITFUX_KEYSTORE_B64 }}
+        run: |
+          if [ -z "$KS" ]; then echo "::error::Secret FITFUX_KEYSTORE_B64 fehlt – siehe README"; exit 1; fi
+          mkdir -p signing && echo "$KS" | base64 -d > signing/fitfux.jks
+      - name: APK bauen
+        working-directory: android
+        env:
+          FITFUX_KS_PASS: ${{ secrets.FITFUX_KS_PASS }}
+        run: chmod +x gradlew && ./gradlew assembleRelease --no-daemon
+      - name: Umbenennen
+        run: cp android/app/build/outputs/apk/release/app-release.apk FitFux-${{ github.run_number }}.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FitFux-${{ github.run_number }}
+          path: FitFux-${{ github.run_number }}.apk
+      - name: Release veröffentlichen
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: FitFux 1.0.${{ github.run_number }}
+          files: FitFux-${{ github.run_number }}.apk
+          make_latest: true
