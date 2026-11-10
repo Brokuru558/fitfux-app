@@ -46,3 +46,4 @@ jobs:
           name: FitFux 1.0.${{ github.run_number }}
           files: FitFux-${{ github.run_number }}.apk
           make_latest: true
+          body: ${{ github.event.head_commit.message || 'Neue Version' }}

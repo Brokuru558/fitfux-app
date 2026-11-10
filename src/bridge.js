@@ -3,6 +3,7 @@ import { Capacitor, CapacitorHttp } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
+import { Browser } from '@capacitor/browser';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Health } from 'capacitor-health';
 
@@ -80,6 +81,16 @@ window.FX = {
     const w = await Filesystem.writeFile({ path: name, data, directory: Directory.Cache, encoding: Encoding.UTF8 });
     await Share.share({ title: name, url: w.uri, dialogTitle: 'Speichern oder teilen' });
   },
+  async appInfo() { try { return await App.getInfo(); } catch { return { version: '', build: '0' }; } },
+  async latestRelease() {
+    const r = await CapacitorHttp.get({ url: 'https://api.github.com/repos/Brokuru558/fitfux-app/releases/latest', headers: { 'User-Agent': UA, Accept: 'application/vnd.github+json' }, connectTimeout: 8000, readTimeout: 10000 });
+    if (r.status !== 200) throw new Error('HTTP ' + r.status);
+    const j = typeof r.data === 'string' ? JSON.parse(r.data) : r.data;
+    const apk = (j.assets || []).find(a => /\.apk$/i.test(a.name));
+    const build = parseInt(String(j.tag_name || '').split('.').pop(), 10) || 0;
+    return { build, tag: j.tag_name, name: j.name, notes: j.body || '', url: apk?.browser_download_url || j.html_url, page: j.html_url, date: j.published_at };
+  },
+  openUrl(url) { return Browser.open({ url }); },
   onResume(cb) { if (native) App.addListener('resume', cb); },
   onBack(cb) { if (native) App.addListener('backButton', cb); },
   exit() { App.exitApp(); }
