@@ -243,6 +243,7 @@ nav.bottom button.on svg{transform:rotate(-8deg) scale(1.1);transition:transform
 html.native [data-tab=coach],html.native [data-act=clearChat]{display:none!important}
 .sugg .src.off,.src.off{background:var(--violet);color:#0e0e12}.off-btn{border-style:dashed!important}
 .card.upd{border-color:var(--lime);background:linear-gradient(135deg,rgba(200,255,0,.16),transparent 70%);animation:bvPop .5s cubic-bezier(.3,1.6,.5,1) both}.upd-ico{font-size:30px;margin-right:10px;display:inline-block;animation:sbRun 1.2s ease-in-out infinite}
+.cl-save{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:14px;font-weight:600}.cl-save input{width:20px!important;height:20px;flex:none;margin:0}
 .cl-imp{margin-top:8px;width:100%}.cl-list{display:grid;gap:6px;margin:10px 0}.cl-i{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--card2);font-size:14px}.cl-i span.grow{display:flex;flex-direction:column;flex:1;min-width:0}.cl-i input{width:20px!important;height:20px;flex:none;margin:0;padding:0}
 .card.hc{border-color:rgba(43,210,255,.5)}
 .sport-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 4px}.sport-btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px 14px;border-radius:18px;border:2px solid var(--line);background:var(--card);color:var(--text);font:inherit;text-align:left;position:relative;overflow:hidden;transition:transform .15s}.sport-btn:active{transform:scale(.96)}
@@ -1276,6 +1277,8 @@ async function claudeImport(prefill){
     <div class="cl-list">${P.items.map((x, i) => `<label class="cl-i"><input type="checkbox" checked data-cl="${i}"><span class="grow"><b>${esc(x.name)}</b><span class="muted small">${esc(x.amount)}${x.amount ? ' · ' : ''}P ${de(x.p)} · K ${de(x.c)} · F ${de(x.f)}</span></span><b>${fmtN(x.kcal)}</b></label>`).join('')}</div>
     <label class="f">Mahlzeit${P.items.some(x => x.slot) ? ' (für Einträge ohne eigene)' : ''}</label>
     <select id="clSlot">${['Frühstück','Mittag','Abend','Snack'].map(x => `<option${x === def ? ' selected' : ''}>${x}</option>`).join('')}</select>
+    <label class="cl-save"><input type="checkbox" id="clKeep"><span>★ Als Schnellwahl speichern – künftig 1 Tipp</span></label>
+    <input id="clName" value="${esc(P.items.length === 1 ? P.items[0].name : P.items.slice(0, 2).map(x => x.name.split(' (')[0]).join(' + ') + (P.items.length > 2 ? ' …' : ''))}" placeholder="Name, z. B. Toast-Mittag" style="display:none;margin-top:6px">
     <button class="btn acc full" style="margin-top:12px" data-act="claudeImportSave">Alle eintragen</button>`);
 }
 function renderToday(){
@@ -2869,7 +2872,12 @@ document.addEventListener('click', e => {
     case 'claudeImportGo': claudeImport($('#clIn')?.value || ''); break;
     case 'claudeImportSave': { const st = sheetState; if (st?.kind !== 'clImp') break; const sl = $('#clSlot')?.value || 'Snack', on = [...document.querySelectorAll('[data-cl]')].filter(x => x.checked).map(x => +x.dataset.cl);
       const add = st.items.filter((_, i) => on.includes(i)).map(x => ({ id: uid(), name: x.name, amount: x.amount, kcal: x.kcal, p: x.p, c: x.c, f: x.f, slot: x.slot || sl }));
-      if (!add.length) { toast('Nichts ausgewählt'); break; } addMeals(st.date, add); closeSheet(); renderToday(); toast(`${add.length} Einträge · ${fmtN(add.reduce((a, x) => a + x.kcal, 0))} kcal eingetragen`); break; }
+      if (!add.length) { toast('Nichts ausgewählt'); break; }
+      let saved = '';
+      if ($('#clKeep')?.checked) { const nm = ($('#clName')?.value || '').trim() || add[0].name, sum = k => r1(add.reduce((a, x) => a + num(x[k]), 0));
+        const rec = { name: nm, amount: '1 Portion', kcal: r0(sum('kcal')), p: sum('p'), c: sum('c'), f: sum('f'), portions: 1, type: 'recipe', ings: add.map(x => ({ name: x.name, amount: x.amount, kcal: x.kcal, p: x.p, c: x.c, f: x.f })) };
+        S.myFoods = [rec, ...S.myFoods.filter(x => x.name !== nm)]; saveMyFoods(); saved = ` · ★ „${nm}“ gespeichert`; }
+      addMeals(st.date, add); closeSheet(); renderToday(); toast(`${add.length} Einträge · ${fmtN(add.reduce((a, x) => a + x.kcal, 0))} kcal${saved}`); break; }
     case 'pasteBackup': openPasteBackup(); break;
     case 'pickBackup': (async () => { try { const t = await window.FX.pickText(); if (t) restoreFromText(t); } catch (e) { if (!/cancel/i.test(String(e?.message || e))) toast('Datei konnte nicht gelesen werden: ' + String(e?.message || e).slice(0, 60)); } })(); break;
     case 'pasteGo': restoreFromText($('#pasteIn')?.value); break;
@@ -2916,6 +2924,7 @@ document.addEventListener('input', e => {
   const t = e.target;
   if (t.closest('#foodRows')) updateSum();
   if (['sqMin','sqKm','sqK'].includes(t.id)) updSportHint();
+  if (t.id === 'clKeep' && $('#clName')) $('#clName').style.display = t.checked ? 'block' : 'none';
   if (t.id === 'quickText') renderSugg();
   if (t.id === 'slotQ') renderSugg('slotQ', 'slotSugg');
   if (t.id === 'gramIn') updateGram();
