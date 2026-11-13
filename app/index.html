@@ -246,6 +246,16 @@ html.native [data-tab=coach],html.native [data-act=clearChat]{display:none!impor
 .cl-save{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:14px;font-weight:600}.cl-save input{width:20px!important;height:20px;flex:none;margin:0}
 .cl-imp{margin-top:8px;width:100%}.cl-list{display:grid;gap:6px;margin:10px 0}.cl-i{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--card2);font-size:14px}.cl-i span.grow{display:flex;flex-direction:column;flex:1;min-width:0}.cl-i input{width:20px!important;height:20px;flex:none;margin:0;padding:0}
 .card.hc{border-color:rgba(43,210,255,.5)}
+.mic{display:inline-flex;width:1.15em;height:1.15em;vertical-align:-.2em;margin-right:5px;filter:drop-shadow(0 0 4px currentColor)}.mic svg{width:100%;height:100%}
+.mic-l{display:inline-flex;align-items:center;justify-content:center}
+.mac .p::before,.mac .cc::before,.mac .ff::before{content:"";display:inline-block;width:11px;height:11px;margin-right:3px;vertical-align:-1px;background:currentColor;-webkit-mask:var(--mi) center/contain no-repeat;mask:var(--mi) center/contain no-repeat}
+.mac .p{--mi:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2.5c3.8 0 6.7 5.6 6.7 10.3A6.7 6.7 0 0 1 5.3 12.8C5.3 8.1 8.2 2.5 12 2.5z'/%3E%3C/svg%3E")}
+.mac .cc{--mi:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M11 22V9h2v13zM12 14c-3.2 0-5.5-2.2-5.5-5.4 3.2 0 5.5 2.2 5.5 5.4zM12 14c3.2 0 5.5-2.2 5.5-5.4-3.2 0-5.5 2.2-5.5 5.4zM12 9.2C9.6 9.2 8 7.6 8 5.2c2.4 0 4 1.6 4 4zM12 9.2c2.4 0 4-1.6 4-4-2.4 0-4 1.6-4 4z'/%3E%3C/svg%3E")}
+.mac .ff{--mi:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2.5s6.5 7 6.5 11.8a6.5 6.5 0 0 1-13 0C5.5 9.5 12 2.5 12 2.5z'/%3E%3C/svg%3E")}
+.qa-tile .tm{display:flex;gap:8px;margin-top:4px;font-size:11.5px;font-weight:700}.qa-tile .tm span{display:inline-flex;align-items:center;gap:2px}.qa-tile .tm .mic{width:13px;height:13px;margin:0;filter:none}
+.qa-tile.flash{animation:qaFlash .5s ease}@keyframes qaFlash{40%{transform:scale(.94);border-color:var(--lime);background:rgba(200,255,0,.15)}}
+.qa-tile .cnt{position:absolute;top:6px;right:8px;background:var(--lime);color:#0e0e12;border-radius:999px;font-size:11px;font-weight:800;padding:1px 7px}.qa-tile{position:relative}
+.fav-btn{background:none;border:0;font-size:22px;line-height:1;padding:4px 6px;color:var(--muted);cursor:pointer}.fav-btn.on{color:#ffd23f;text-shadow:0 0 10px rgba(255,210,63,.6)}
 .sport-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 4px}.sport-btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px 14px;border-radius:18px;border:2px solid var(--line);background:var(--card);color:var(--text);font:inherit;text-align:left;position:relative;overflow:hidden;transition:transform .15s}.sport-btn:active{transform:scale(.96)}
 .sport-btn .ico{font-size:26px;line-height:1;margin-bottom:4px;display:inline-block}.sport-btn b{font-size:16px}.sport-btn span:last-child{font-size:12px;color:var(--muted)}
 .sport-btn.run{border-color:rgba(0,214,255,.5);background:linear-gradient(135deg,rgba(0,214,255,.14),transparent 70%)}.sport-btn.ball{border-color:rgba(255,79,163,.5);background:linear-gradient(135deg,rgba(255,79,163,.14),transparent 70%)}
@@ -594,6 +604,9 @@ const FOODDB = [
 
 /* ---------- helpers ---------- */
 const IC = {
+  kh:'<svg viewBox="0 0 24 24"><path d="M12 22V8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 14c-3.2 0-5.5-2.2-5.5-5.4 3.2 0 5.5 2.2 5.5 5.4zM12 14c3.2 0 5.5-2.2 5.5-5.4-3.2 0-5.5 2.2-5.5 5.4zM12 9.2C9.6 9.2 8 7.6 8 5.2c2.4 0 4 1.6 4 4zM12 9.2c2.4 0 4-1.6 4-4-2.4 0-4 1.6-4 4zM12 5c-.9-.8-1.2-1.9-.8-3 .9.8 1.2 1.9.8 3z" fill="currentColor"/></svg>',
+  pr:'<svg viewBox="0 0 24 24"><path d="M12 2.5c3.8 0 6.7 5.6 6.7 10.3A6.7 6.7 0 0 1 5.3 12.8C5.3 8.1 8.2 2.5 12 2.5z" fill="currentColor"/><path d="M9.2 9.5c.4-1.6 1.2-2.9 2.2-3.6" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.6" stroke-linecap="round"/><path d="M12.6 11.2l-2.4 3.6h2.2l-1 3.2 3-4.2h-2.2l1.2-2.6z" fill="#0e0e12" fill-opacity=".55"/></svg>',
+  fa:'<svg viewBox="0 0 24 24"><path d="M12 2.5s6.5 7 6.5 11.8a6.5 6.5 0 0 1-13 0C5.5 9.5 12 2.5 12 2.5z" fill="currentColor"/><path d="M9 14.5c0 1.8 1.2 3.1 2.8 3.4" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="1.6" stroke-linecap="round"/></svg>',
   cam:'<svg class="ico" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
   plus:'<svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
   star:'<svg class="ico" viewBox="0 0 24 24"><path d="M12 4l2.4 5 5.4.6-4 3.7 1.1 5.3L12 16l-4.9 2.6 1.1-5.3-4-3.7 5.4-.6z"/></svg>',
@@ -1350,7 +1363,7 @@ function renderToday(){
     <div class="card ov"${gfx('bg:hero') ? ` style="background-image:linear-gradient(rgba(14,14,18,.72),rgba(14,14,18,.88)),url(${gfx('bg:hero')});background-size:cover;background-position:center"` : ''}><div class="ov-top"><div class="ov-side"><b>${fmtN(tot.kcal)}</b><span>Gegessen</span></div>
       <div class="ov-gauge${rest >= 0 && rest < budget * 0.05 && tot.kcal ? ' done' : ''}">${gauge(tot.kcal, budget)}<div class="ov-c"><b style="${rest < 0 ? 'color:var(--orange)' : ''}">${fmtN(Math.abs(rest))}</b><span>${rest >= 0 ? 'Übrig' : 'drüber'}</span></div></div>
       <div class="ov-side"><b>${fmtN(burned)}</b><span>Bewegung</span></div></div>
-      <div class="ov-mac">${[['Kohlenh.', tot.c, B.carbs, 'var(--lime)'], ['Eiweiß', tot.p, B.protein, 'var(--pink)'], ['Fett', tot.f, B.fat, 'var(--cyan)']].map(([l, v, m, c]) => `<div><span>${l}</span><div class="track"><i style="width:${Math.min(100, m ? v / m * 100 : 0)}%;background:${c}"></i></div><b>${r0(v)} / ${r0(m)} g</b></div>`).join('')}</div>
+      <div class="ov-mac">${[['Kohlenh.', tot.c, B.carbs, 'var(--lime)', IC.kh], ['Eiweiß', tot.p, B.protein, 'var(--pink)', IC.pr], ['Fett', tot.f, B.fat, 'var(--cyan)', IC.fa]].map(([l, v, m, c, ic]) => `<div><span class="mic-l"><i class="mic" style="color:${c}">${ic}</i>${l}</span><div class="track"><i style="width:${Math.min(100, m ? v / m * 100 : 0)}%;background:${c}"></i></div><b>${r0(v)} / ${r0(m)} g</b></div>`).join('')}</div>
       ${budgetLine(B, tot.kcal)}</div>`;
     h += fatCard();
     if (isToday && [0, 1].includes(new Date().getDay())) h += weekReviewCard(new Date().getDay() === 0 ? 0 : -1, true);
@@ -1373,7 +1386,7 @@ function renderToday(){
     <div class="row" style="margin-top:10px">${NATIVE() ? `<button class="btn ghost sm grow" data-act="scanCode">▥ Scannen</button>` : `<label class="btn ghost sm grow" style="cursor:pointer">${IC.cam} Foto<input type="file" accept="image/*" id="photoIn" hidden></label>`}<button class="btn ghost sm grow" data-act="manual">${IC.plus} Manuell</button><button class="btn ghost sm grow" data-act="myFoods">${IC.star} Meine</button></div>${NATIVE() ? `<button class="btn acc sm full cl-imp" data-act="claudeImport">📋 Von Claude einfügen</button>` : ''}
     <div id="sugg"></div><div id="quickBusy"></div>`;
   { const mine = myFoodsSorted();
-    h += `<div class="qa-head"><span>Schnellwahl</span><span class="muted small">${mine.length ? '1× tippen = 1 Portion' : 'aus Zutaten zusammenstellen'}</span></div><div class="qa">${mine.map(({ f, i }) => `<button class="qa-tile" data-act="quickAdd" data-i="${i}"><b>${esc(f.name)}</b><span>${fmtN(f.kcal)} kcal · ${r0(f.p)} g P</span></button>`).join('')}<button class="qa-tile qa-new" data-act="newRecipe">${IC.plus}<span>Neues Rezept</span></button></div>`; }
+    h += `<div class="qa-head"><span>Schnellwahl</span><span class="muted small">${mine.length ? '1× tippen = 1 Portion' : 'aus Zutaten zusammenstellen'}</span></div><div class="qa">${mine.map(({ f, i }) => `<button class="qa-tile" data-act="quickAdd" data-i="${i}"><b>${esc(f.name)}</b><span>${fmtN(f.kcal)} kcal${f.amount ? ` · ${esc(f.amount)}` : ''}</span><span class="tm"><span style="color:var(--lime)"><i class="mic">${IC.kh}</i>${r0(f.c)}</span><span style="color:var(--pink)"><i class="mic">${IC.pr}</i>${r0(f.p)}</span><span style="color:var(--cyan)"><i class="mic">${IC.fa}</i>${r0(f.f)}</span></span></button>`).join('')}<button class="qa-tile qa-new" data-act="newRecipe">${IC.plus}<span>Neues Rezept</span></button></div>`; }
   const rec = recentFoods();
   if (rec.length) h += `<div style="margin-top:8px"><span class="muted small">Schnell nochmal:</span><br>${rec.map((m,i) => `<span class="chip" data-act="readd" data-i="${i}">${esc(m.name)}</span>`).join('')}</div>`;
   h += `</div>`;
@@ -1994,7 +2007,7 @@ function openDayDetails(slot){
   const SL = { 'Frühstück':'Frühstück', 'Mittag':'Mittagessen', 'Abend':'Abendessen', 'Snack':'Snacks' };
   slot = slot || (['Frühstück','Mittag','Abend','Snack'].find(x => meals.some(m => (m.slot || 'Snack') === x)) || 'Frühstück');
   const bar = (l, v, m, c, u, i) => { const pct = m ? Math.min(100, v / m * 100) : 0, over = m && v > m; return `<div class="dd-row" style="--d:${i * 0.08}s"><div class="dd-top"><span>${l}</span><b>${fmtN(r0(v))} <span class="muted">/ ${fmtN(r0(m))} ${u}</span></b></div><div class="dd-track"><i style="width:${pct}%;background:${over ? 'var(--orange)' : c}"></i></div></div>`; };
-  const goalRows = (k, c, p, f, mul = 1) => [['Kalorien', k, B.kcal * mul, 'var(--lime)', 'kcal'], ['Kohlenhydrate', c, B.carbs * mul, 'var(--cyan)', 'g'], ['Eiweiß', p, B.protein * mul, 'var(--pink)', 'g'], ['Fett', f, B.fat * mul, 'var(--orange)', 'g']].map((r, i) => bar(...r, i)).join('');
+  const goalRows = (k, c, p, f, mul = 1) => [['🔥 Kalorien', k, B.kcal * mul, 'var(--orange)', 'kcal'], [`<i class="mic" style="color:var(--lime)">${IC.kh}</i>Kohlenhydrate`, c, B.carbs * mul, 'var(--lime)', 'g'], [`<i class="mic" style="color:var(--pink)">${IC.pr}</i>Eiweiß`, p, B.protein * mul, 'var(--pink)', 'g'], [`<i class="mic" style="color:var(--cyan)">${IC.fa}</i>Fett`, f, B.fat * mul, 'var(--cyan)', 'g']].map((r, i) => bar(...r, i)).join('');
   const sm = meals.filter(m => (m.slot || 'Snack') === slot), st = sm.reduce((a, m) => ({ k:a.k + num(m.kcal), c:a.c + num(m.c), p:a.p + num(m.p), f:a.f + num(m.f) }), { k:0, c:0, p:0, f:0 });
   const P = B.parts || {};
   const comp = [['Grundumsatz', B.pure ? P.bmr : P.base, '#8b84a8'], ['Schritte', P.stepK, 'var(--cyan)'], ['Verdauung', P.tefK, 'var(--orange)'], ['Stehen/Alltag', P.jobK, 'var(--pink)'], ['Training', P.trainK, 'var(--lime)'], ['Sport', P.sportK, 'var(--violet)']].filter(x => x[1] > 0);
@@ -2090,7 +2103,7 @@ function openSlotAdd(slot){
   openSheet(`<div class="row"><h2 class="grow">${slot === 'Snack' ? 'Snack' : slot} hinzufügen</h2><button class="icon-btn" data-act="closeSheet">✕</button></div>
     <div class="row" style="margin-top:6px"><input id="slotQ" autocomplete="off" placeholder="Suchen oder beschreiben…"><button class="btn acc" data-act="slotEstimate" aria-label="Berechnen">${IC.go}</button></div>
     <div id="slotSugg" data-sugg="1"></div><div id="slotBusy"></div>
-    ${mine.length ? `<div class="qa-head"><span>Schnellwahl</span><span class="muted small">1× tippen</span></div><div class="qa">${mine.map(({ f, i }) => `<button class="qa-tile" data-act="quickAdd" data-i="${i}"><b>${esc(f.name)}</b><span>${fmtN(f.kcal)} kcal · ${r0(f.p)} g P</span></button>`).join('')}</div>` : ''}
+    ${mine.length ? `<div class="qa-head"><span>★ Favoriten</span><button class="link small" data-act="myFoods">bearbeiten</button></div><div class="qa">${mine.map(({ f, i }) => `<button class="qa-tile" data-act="quickAdd" data-i="${i}"><b>${esc(f.name)}</b><span>${fmtN(f.kcal)} kcal${f.amount ? ` · ${esc(f.amount)}` : ''}</span><span class="tm"><span style="color:var(--lime)"><i class="mic">${IC.kh}</i>${r0(f.c)}</span><span style="color:var(--pink)"><i class="mic">${IC.pr}</i>${r0(f.p)}</span><span style="color:var(--cyan)"><i class="mic">${IC.fa}</i>${r0(f.f)}</span></span></button>`).join('')}</div>` : ''}
     ${rec.length ? `<div class="qa-head"><span>Zuletzt gegessen</span></div><div>${rec.map((m, i) => `<span class="chip" data-act="readd" data-i="${i}">${esc(m.name)}</span>`).join('')}</div>` : ''}
     <div class="row" style="margin-top:14px">${NATIVE() ? `<button class="btn ghost sm grow" data-act="scanCode">▥ Scannen</button>` : `<label class="btn ghost sm grow" style="cursor:pointer">${IC.cam} Foto<input type="file" accept="image/*" id="photoIn2" hidden></label>`}<button class="btn ghost sm grow" data-act="manual">${IC.plus} Manuell</button><button class="btn ghost sm grow" data-act="newRecipe">${IC.plus} Rezept</button></div>${NATIVE() ? `<button class="btn acc sm full cl-imp" data-act="claudeImportSlot">📋 Von Claude einfügen</button>` : ''}`, true);
   $('#tab-today')._rec = rec;
@@ -2100,15 +2113,17 @@ function openSlotAdd(slot){
 function myFoodsSorted(){
   const cnt = {};
   Object.values(S.days).forEach(d => (d.meals || []).forEach(m => { const k = norm(m.name); cnt[k] = (cnt[k] || 0) + 1; }));
-  return S.myFoods.map((f, i) => ({ f, i, n: cnt[norm(f.name)] || 0 })).filter(x => x.f.type === 'recipe' || x.f.fav).sort((a,b) => b.n - a.n || a.i - b.i).slice(0, 16);
+  return S.myFoods.map((f, i) => ({ f, i, n: cnt[norm(f.name)] || 0 })).filter(x => x.f.type === 'recipe' || x.f.fav).sort((a,b) => b.n - a.n || a.i - b.i).slice(0, 24);
 }
 function quickAdd(i){
   const f = S.myFoods[i]; if (!f) return;
   const date = S.viewDate, slot = curSlot || (date === today() ? slotNow() : 'Abend'), id = uid();
-  if (curSlot) closeSheet();
+  const inSheet = !!curSlot && !!document.querySelector('#slotQ');
   addMeals(date, [{ id, name:f.name, amount:f.amount || '', kcal:r0(f.kcal), p:r1(f.p), c:r1(f.c), f:r1(f.f), slot }]);
   undoToast(`${f.name} eingetragen (${slot})`, () => { const d = S.days[date]; if (!d) return; d.meals = d.meals.filter(m => m.id !== id); saveDay(date); renderToday(); });
-  const tile = document.querySelector(`.qa-tile[data-i="${i}"]`); tile?.classList.add('pop');
+  const tile = (inSheet ? document.querySelector('#slotQ')?.closest('.sheet, #sheet, .sheet-card, #sheetCard') : document)?.querySelector(`.qa-tile[data-i="${i}"]`) || document.querySelector(`.qa-tile[data-i="${i}"]`);
+  if (tile) { tile.classList.remove('flash', 'pop'); void tile.offsetWidth; tile.classList.add(inSheet ? 'flash' : 'pop');
+    if (inSheet) { const n = (+tile.dataset.n || 0) + 1; tile.dataset.n = n; let c = tile.querySelector('.cnt'); if (!c) { c = document.createElement('span'); c.className = 'cnt'; tile.appendChild(c); } c.textContent = n + '×'; } }
 }
 function undoToast(text, undo){
   $('#undoT')?.remove();
@@ -2228,13 +2243,13 @@ function rememberFood(it){
 }
 function openMyFoods(){
   sheetState = { kind:'my' };
-  const rows = (list) => list.map(({ f, i }) => `<div class="item"><div class="n" data-act="useMy" data-i="${i}"><div>${esc(f.name)}${f.amount ? ` <span class="muted small">· ${esc(f.amount)}</span>` : ''}</div><div class="mac">${f.type === 'recipe' ? `${(f.ings || []).length} Zutaten · ` : ''}<span class="p">P ${r0(f.p)}</span> · <span class="cc">K ${r0(f.c)}</span> · <span class="ff">F ${r0(f.f)}</span></div></div><div class="k">${r0(f.kcal)}</div>${f.type === 'recipe' ? `<button class="icon-btn" data-act="editRecipe" data-i="${i}" aria-label="Bearbeiten">✎</button>` : ''}<button class="icon-btn" data-act="delMy" data-i="${i}">×</button></div>`).join('');
+  const rows = (list) => list.map(({ f, i }) => `<div class="item"><div class="n" data-act="useMy" data-i="${i}"><div>${esc(f.name)}${f.amount ? ` <span class="muted small">· ${esc(f.amount)}</span>` : ''}</div><div class="mac">${f.type === 'recipe' ? `${(f.ings || []).length} Zutaten · ` : ''}<span class="p">P ${r0(f.p)}</span> · <span class="cc">K ${r0(f.c)}</span> · <span class="ff">F ${r0(f.f)}</span></div></div><div class="k">${r0(f.kcal)}</div><button class="fav-btn${f.fav || f.type === 'recipe' ? ' on' : ''}" data-act="togFav" data-i="${i}" aria-label="Favorit">${f.fav || f.type === 'recipe' ? '★' : '☆'}</button>${f.type === 'recipe' ? `<button class="icon-btn" data-act="editRecipe" data-i="${i}" aria-label="Bearbeiten">✎</button>` : ''}<button class="icon-btn" data-act="delMy" data-i="${i}">×</button></div>`).join('');
   const all = S.myFoods.map((f, i) => ({ f, i })), rec = all.filter(x => x.f.type === 'recipe'), single = all.filter(x => x.f.type !== 'recipe');
   openSheet(`<div class="row"><h2 class="grow">Meine Lebensmittel</h2><button class="icon-btn" data-act="closeSheet">✕</button></div>
     <h3 style="margin-top:10px">Rezepte</h3><p class="muted small" style="margin:2px 0 6px">Aus Zutaten zusammengestellt – erscheinen als Kacheln auf dem Heute-Screen.</p>
     ${rows(rec) || '<p class="muted small">Noch keine Rezepte.</p>'}
     <button class="btn acc sm" style="margin-top:8px" data-act="newRecipe">${IC.plus} Neues Rezept</button>
-    <h3 style="margin-top:18px">Einzelne Lebensmittel</h3><p class="muted small" style="margin:2px 0 6px">Feste Werte, z. B. dein Proteinshake – findest du über die Suche.</p>
+    <h3 style="margin-top:18px">Einzelne Lebensmittel</h3><p class="muted small" style="margin:2px 0 6px">Tippe auf ☆, um es als <b>Favorit</b> oben bei jeder Mahlzeit anzuzeigen.</p>
     ${rows(single) || '<p class="muted small">Noch keine.</p>'}
     <button class="btn ghost sm" style="margin-top:8px" data-act="newMy">${IC.plus} Neues Lebensmittel</button>`, true);
 }
@@ -2922,6 +2937,7 @@ document.addEventListener('click', e => {
     case 'hcConnect': (async () => { let ok = false; try { ok = await window.FX.health.connect(); } catch (e) { console.warn(e); } hcState.granted = ok || await window.FX.health.granted(); renderProfile(); if (hcState.granted) hcSync(false); else toast('Keine Berechtigung – unter „Berechtigungen“ in Health Connect FitFux erlauben'); })(); break;
     case 'hcSync': hcSync(false); break;
     case 'claudeImport': closeSheet(); claudeImport(); break;
+    case 'togFav': { const f = S.myFoods[+a.dataset.i]; if (!f) break; if (f.type === 'recipe') { toast('Rezepte sind immer Favoriten'); break; } f.fav = !f.fav; saveMyFoods(); a.classList.toggle('on', f.fav); a.textContent = f.fav ? '★' : '☆'; toast(f.fav ? '★ Favorit' : 'Kein Favorit mehr'); renderToday(); break; }
     case 'claudeImportSlot': { const keep = curSlot; closeSheet(); curSlot = keep; claudeImport(); break; }
     case 'claudeSaveMine': { const st = sheetState; if (st?.kind !== 'clSave') break; const on = [...document.querySelectorAll('[data-cl]')].filter(x => x.checked).map(x => +x.dataset.cl);
       const add = st.items.filter((_, i) => on.includes(i)).map(x => ({ name: x.name, amount: x.amount, kcal: x.kcal, p: x.p, c: x.c, f: x.f, fav: true }));
