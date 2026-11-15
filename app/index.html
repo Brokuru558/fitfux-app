@@ -715,6 +715,11 @@ function targets(){
 // MET-Werte nach Compendium of Physical Activities (Ainsworth/Herrmann 2024)
 const ACTS = [['Gehen (zügig)',4.3],['Wandern',6],['Joggen (~8 km/h)',8.3],['Laufen (~10 km/h)',9.8],['Laufen (~12 km/h)',11.5],['Radfahren (gemütlich)',6.8],['Radfahren (zügig)',8],['E-Bike',4],['Spinning / Indoor-Cycling',8.5],['Schwimmen (moderat)',5.8],['Rudergerät',7],['Crosstrainer',5],['HIIT / Zirkeltraining',8],['Fußball',7],['Basketball / Volleyball',6.5],['Tennis / Badminton',7],['Yoga / Mobility',2.5],['Tanzen',5],['Klettern / Bouldern',7.5],['Extra-Krafttraining (nicht im Plan)',5]];
 function actKcal(type, min){ const w = num(S.profile?.weight) || 75; const met = (ACTS.find(a => a[0] === type) || [0, 5])[1]; return r0(met * w * min / 60); }
+function workoutKcal(wo){
+  const w = num(S.profile?.weight) || 75; let min = num(wo?.min);
+  if (!min) { const sets = (wo?.exercises || []).reduce((a, e) => a + (e.sets?.length || 0), 0); min = Math.min(120, Math.max(30, sets * 3)); }   // ~3 min pro Satz inkl. Pause
+  return r0(w * 4 * min / 60);   // Krafttraining netto ≈ 4 kcal/kg/h über Ruhe
+}
 function dayMove(date){
   const d = S.days[date] || {}, w = num(S.profile?.weight) || 75;
   const acts = d.acts || [];
@@ -736,7 +741,7 @@ function dayBudget(date){
   const real = num(S.days[date]?.steps), steps = pure ? real : (real || 6000), est = !pure && !real;
   // netto ~0,03 kcal pro Schritt bei 80 kg (Gehen ≈ 0,5 kcal/kg/km über Ruhe). pure: jeder Schritt zählt, sonst erst ab 3 000 (Rest steckt im 20-%-Aufschlag)
   const stepK = Math.max(0, steps - (pure ? 0 : 3000)) * 0.0004 * w;
-  const trained = S.workouts.some(x => x.date === date), trainK = trained ? w * 4 : 0;   // ~4 kcal/kg für ~60 min Krafttraining
+  const trainK = S.workouts.filter(x => x.date === date).reduce((a, x) => a + workoutKcal(x), 0);
   const sportK = p.eatBack === false ? 0 : (pure ? 1 : 0.5) * (mv.actNet || 0);
   // pure: Verdauung (~10 % des Gegessenen) + Arbeitsalltag ohne Schritte (Stehen etc., nur Mo–Fr)
   const dow = new Date(date + 'T12:00:00').getDay(), workday = dow >= 1 && dow <= 5;
@@ -746,9 +751,9 @@ function dayBudget(date){
   const tdee = base + stepK + trainK + sportK + tefK + jobK + calib;
   let adj = 0;
   if (p.goal === 'cut' || p.goal === 'recomp') adj = -Math.min(D.deficit, tdee * 0.25); else if (p.goal === 'bulk') adj = D.surplus;
-  const floorK = Math.max(bmr, p.sex === 'w' ? 1200 : 1500), kcal = Math.max(tdee + adj, floorK), floored = tdee + adj < floorK;
+  const floorK = Math.max(bmr, p.sex === 'w' ? 1200 : 1500), extraK = trainK + sportK, kcal = Math.max(tdee - extraK + adj, floorK) + extraK, floored = tdee - extraK + adj < floorK;
   const protein = r0(w * D.pkg), fat = r0(Math.max(kcal * D.fatPct / 100 / 9, w * 0.6)), carbs = r0(Math.max(0, (kcal - protein * 4 - fat * 9) / 4));
-  return { kcal: r0(kcal), protein, fat, carbs, mode:'daily', pure, floored, parts:{ bmr:r0(bmr), base:r0(base), stepK:r0(stepK), trainK:r0(trainK), sportK:r0(sportK), tefK:r0(tefK), jobK:r0(jobK), calib:r0(calib), burn:r0(tdee), adj:r0(adj), steps, est, trained } };
+  return { kcal: r0(kcal), protein, fat, carbs, mode:'daily', pure, floored, parts:{ bmr:r0(bmr), base:r0(base), stepK:r0(stepK), trainK:r0(trainK), sportK:r0(sportK), tefK:r0(tefK), jobK:r0(jobK), calib:r0(calib), burn:r0(tdee), adj:r0(adj), steps, est, trained: trainK > 0 } };
 }
 let _bvKey = '';
 function budgetLine(B, eaten = 0, force = false){
@@ -759,7 +764,7 @@ function budgetLine(B, eaten = 0, force = false){
     ['Schritte', P.stepK, 'var(--cyan)', `${fmtN(P.steps)} Schritte${P.est ? ' (geschätzt)' : ''}`],
     ['Verdauung', P.tefK, 'var(--orange)', '10 % vom Essen'],
     ['Stehen/Alltag', P.jobK, 'var(--pink)', 'Werktag'],
-    ['Training', P.trainK, 'var(--lime)', 'Krafttraining'],
+    ['Krafttraining', P.trainK, 'var(--lime)', 'Krafttraining'],
     ['Sport', P.sportK, 'var(--violet)', 'Aktivitäten'],
     ['Abgleich', P.calib, '#6b6680', 'aus Gewichtstrend'],
   ].filter(x => x[1] > 0);
@@ -1491,7 +1496,7 @@ function renderTrain(){
   h += `<div class="card"><h2>${esc(new Date(d).toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long' }))}</h2>`;
   if (wk.length) h += wk.map(w => { const sets = (w.exercises || []).reduce((a,e) => a + (e.sets?.length || 0), 0); return `<div class="fx-card" style="border-color:var(--lime)"><div class="row"><b class="grow">✓ ${esc(w.day || 'Training')}</b><span class="muted small">${sets} Sätze</span></div>
       <div class="muted small" style="margin-top:4px">${(w.exercises || []).map(e => `${esc(e.name)} ${e.sets.map(x => `${de(x.kg)}×${x.reps}`).join(' ')}`).join(' · ')}</div>
-      <div class="row" style="margin-top:8px"><button class="btn sm ghost" data-act="editWorkout" data-id="${esc(w.id)}">Bearbeiten / ergänzen</button></div></div>`; }).join('');
+      <div class="row" style="margin-top:8px;gap:8px;align-items:center"><span class="pill" style="background:var(--lime);color:#0e0e12">🔥 ≈ ${fmtN(workoutKcal(w))} kcal</span><span class="grow"></span><button class="btn sm ghost" data-act="editWorkout" data-id="${esc(w.id)}">Bearbeiten</button><button class="btn sm ghost" style="color:var(--bad)" data-act="askDelWorkout" data-id="${esc(w.id)}">Löschen</button></div></div>`; }).join('');
   if (!S.plan) {
     h += `<p class="muted">Noch kein Trainingsplan – dann kann ich dir für jeden Tag etwas empfehlen.</p><div class="row wrap"><button class="btn acc" data-act="templatePlan">Plan aus meinen Optionen</button><button class="btn ghost" data-act="coachPlan">Mit Fux erstellen</button></div>`;
   } else {
@@ -2758,7 +2763,8 @@ function editWorkout(id){
 function finishWorkout(){
   const exercises = draft.exercises.map(e => ({ name: e.name, muscle: e.muscle || EXLIB[e.name]?.m || '', sets: e.sets.filter(s => num(s.reps) > 0).map(s => ({ kg: num(s.kg), reps: num(s.reps) })) })).filter(e => e.sets.length);
   if (!exercises.length) { toast('Noch keine Sätze eingetragen'); return; }
-  const w = { id: draft.id, date: draft.date, day: draft.day, ts: draft.ts, exercises };
+  const dur = draft.ts && draft.date === today() ? Math.round((Date.now() - draft.ts) / 6e4) : 0;
+  const w = { id: draft.id, date: draft.date, day: draft.day, ts: draft.ts, exercises, ...(dur >= 15 && dur <= 180 ? { min: dur } : {}) };
   S.workouts = [w, ...S.workouts.filter(x => x.id !== w.id)];
   put('workouts/' + w.id, w);
   draft = null; try { localStorage.removeItem('fitti:draft'); } catch {}
@@ -2766,9 +2772,9 @@ function finishWorkout(){
 }
 function viewWorkout(id){
   const w = S.workouts.find(x => x.id === id); if (!w) return;
-  openSheet(`<div class="row"><h2 class="grow">${esc(w.day)}</h2><button class="icon-btn" data-act="closeSheet">✕</button></div><p class="muted small">${esc(fmtDate(w.date))}</p>
+  openSheet(`<div class="row"><h2 class="grow">${esc(w.day)}</h2><button class="icon-btn" data-act="closeSheet">✕</button></div><p class="muted small">${esc(fmtDate(w.date))} · 🔥 ≈ ${fmtN(workoutKcal(w))} kcal${w.min ? ` · ${w.min} min` : ''}</p>
     ${w.exercises.map(e => `<div class="ex"><b>${esc(e.name)}</b><div class="muted small">${e.sets.map(s => `${de(s.kg)} kg × ${s.reps}`).join(' · ')}</div></div>`).join('')}
-    <div class="row wrap" style="margin-top:12px"><button class="btn acc sm" data-act="editWorkout" data-id="${esc(w.id)}">Bearbeiten / ergänzen</button><button class="btn ghost sm" style="color:var(--bad)" data-act="delWorkout" data-id="${esc(w.id)}">Einheit löschen</button></div>`);
+    <div class="row wrap" style="margin-top:12px"><button class="btn acc sm" data-act="editWorkout" data-id="${esc(w.id)}">Bearbeiten / ergänzen</button><button class="btn ghost sm" style="color:var(--bad)" data-act="askDelWorkout" data-id="${esc(w.id)}">Einheit löschen</button></div>`);
 }
 
 /* ---------- global events ---------- */
@@ -2884,7 +2890,9 @@ document.addEventListener('click', e => {
     case 'schedMode': { if (!S.profile) break; S.profile.scheduleMode = a.dataset.m; if (a.dataset.m === 'fixed' && !S.profile.schedule) S.profile.schedule = schedule(); saveProfile(); renderTrain(); schedBox(true); break; }
     case 'fbDay': { if (!S.profile) break; S.profile.footballDay = +a.dataset.w; saveProfile(); renderTrain(); schedBox(true); break; }
     case 'schedTog': { if (!S.profile) break; S.profile.scheduleMode = 'fixed'; const w = +a.dataset.w, cur = schedule(); const nx = cur.includes(w) ? cur.filter(x => x !== w) : [...cur, w]; if (!nx.length) break; S.profile.schedule = nx.sort((x, y) => x - y); saveProfile(); renderTrain(); schedBox(true); toast('Trainingstage gespeichert'); break; }
-    case 'delWorkout': { const id = a.dataset.id; S.workouts = S.workouts.filter(w => w.id !== id); del('workouts/' + id); closeSheet(); renderTrain(); toast('Gelöscht'); break; }
+    case 'askDelWorkout': { const w = S.workouts.find(x => x.id === a.dataset.id); if (!w) break;
+      openSheet(`<h2>Training löschen?</h2><p class="muted">${esc(w.day || 'Training')} vom ${esc(fmtDate(w.date))} mit ${(w.exercises || []).length} Übungen wird entfernt – auch die ≈ ${fmtN(workoutKcal(w))} kcal im Budget.</p><div class="row" style="gap:8px;margin-top:12px"><button class="btn ghost grow" data-act="closeSheet">Abbrechen</button><button class="btn acc grow" style="background:var(--bad);color:#fff" data-act="delWorkout" data-id="${esc(w.id)}">Löschen</button></div>`); break; }
+    case 'delWorkout': { const id = a.dataset.id; S.workouts = S.workouts.filter(w => w.id !== id); del('workouts/' + id); closeSheet(); renderTrain(); renderToday(); toast('Training gelöscht'); break; }
     case 'delWeight': { S.weights = S.weights.filter(w => w.date !== a.dataset.d); saveWeights(); renderProgress(); break; }
     case 'chip': { const t = a.dataset.t; if (t.endsWith(': ')) { $('#chatIn').value = t; $('#chatIn').focus(); } else sendChat(t); break; }
     case 'stopChat': chatCtl?.abort(); break;
