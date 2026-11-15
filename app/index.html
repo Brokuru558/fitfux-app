@@ -874,6 +874,7 @@ Object.assign(EXLIB, {
   'Abduktoren-Maschine': X('Beinbeuger/Po',[],'i',['gym'],'Leicht nach vorn lehnen, Beine nach außen drücken.','Trifft den seitlichen Po (Gluteus medius).'),
   'Wadenheben an der Beinpresse': X('Waden',[],'i',['gym'],'Fußballen an der Plattform-Kante, unten tief dehnen.','Wadenvariante ohne Wadenmaschine.'),
   'Wadenheben (Multipresse)': X('Waden',[],'i',['gym'],'Ballen auf einer Erhöhung, unten halten.','Schwer belastbar und stabil.'),
+  'Sit-ups kopfüber (Schrägbank)': X('Bauch',[],'i',['gym'],'Füße oben einhaken, Kopf nach unten, langsam bis kurz vor die Bank abrollen und wieder hoch. Für mehr Last: Scheibe vor die Brust.','Schwerer als normale Sit-ups und gut steigerbar – über Neigung oder Zusatzgewicht.'),
   'Sit-ups': X('Bauch',[],'i',['gym','home','bw'],'Füße fixiert, Rücken langsam abrollen, nicht am Nacken ziehen.','Klassische Bauchübung; Crunch-Varianten mit Zusatzgewicht lassen sich besser steigern.'),
   'Plank': X('Bauch',[],'i',['gym','home','bw'],'Körper gerade, Po & Bauch fest, ruhig atmen.','Rumpfstabilität; für Bauch-Wachstum sind Crunch-Varianten besser.'),
   'Ab-Roller': X('Bauch',[],'i',['gym','home'],'Becken eingerollt, nur so weit wie der Rücken gerade bleibt.','Sehr starker Bauchreiz in gedehnter Position.')
@@ -2631,7 +2632,7 @@ function openExSheet(ctx){
     ${L.why ? `<p class="small muted" style="margin:4px 0">${esc(L.why)}</p>` : ''}
     <label class="row small" style="margin:10px 0;gap:8px;cursor:pointer"><input type="checkbox" id="unavChk" style="width:auto" ${un ? 'checked' : ''}> Hab ich nicht im Studio (wird in neuen Plänen ersetzt)</label>
     <h3 style="margin-top:14px">Alternativen</h3><p class="muted small" style="margin:2px 0 6px">Antippen zum Tauschen${ctx.draft ? ' (nur dieses Training)' : ' im Plan'}.</p>
-    <div>${alts.map(n => `<div class="exrow" data-act="swapTo" data-n="${esc(n)}">${exImg(n, true)}<div class="grow"><div class="small" style="font-weight:700">${esc(n)}</div><div class="eqtag">${EXLIB[n].t === 'c' ? 'Grundübung' : 'Isolation'} · ${esc(eqTxt(EXLIB[n].eq))}</div></div></div>`).join('') || '<p class="muted small">Keine Alternativen.</p>'}</div>
+    <div>${alts.map(n => `<div class="exrow" data-act="swapTo" data-n="${esc(n)}">${exImg(n, true)}<div class="grow"><div class="small" style="font-weight:700">${esc(n)}${EX_ALIAS[n] ? ` <span class="pill" style="font-size:10px;padding:1px 6px">${esc(EX_ALIAS[n])}</span>` : ''}</div><div class="eqtag">${!EXLIB[n] ? 'Eigene Übung' : EXLIB[n].t === 'c' ? 'Grundübung' : 'Isolation'} · ${esc(eqTxt(EXLIB[n].eq))}</div></div></div>`).join('') || '<p class="muted small">Keine Alternativen.</p>'}</div>
     ${ctx.draft || ctx.start ? (ctx.start ? `<button class="btn ghost sm" style="margin-top:12px" data-act="stBack">Zurück</button>` : '') : `<button class="btn ghost sm" style="margin-top:12px;color:var(--danger);border-color:var(--danger)" data-act="removeEx">Aus dem Plan entfernen</button>`}
     <p class="muted small" style="margin-top:14px">Fotos: Free Exercise DB (Public Domain).</p>`, true);
 }
@@ -2652,19 +2653,28 @@ function swapTo(n){
 }
 
 /* ---------- Übungsauswahl nach Kategorien ---------- */
-let pickCtx = null, pickCat = 'Brust';
-const CATS = ['Brust','Rücken','Schultern','Bizeps','Trizeps','Beine (Quadrizeps)','Beinbeuger/Po','Waden','Bauch'];
+let pickCtx = null, pickCat = '⭐ Meine';
+/* Gerätenamen aus dem Studio → Übung in FitFux */
+const EX_ALIAS = { 'Brustpresse (Maschine)':'Chest Press', 'Latzug (breit)':'Lat Pull', 'Butterfly (Maschine)':'Pec Fly', 'Reverse Butterfly (Maschine)':'Rear Delt', 'Sit-ups kopfüber (Schrägbank)':'Decline Sit-ups' };
+const exLabel = n => EX_ALIAS[n] ? `${n} · ${EX_ALIAS[n]}` : n;
+function myExercises(){
+  const cnt = {}; for (const w of S.workouts) for (const e of w.exercises || []) cnt[e.name] = (cnt[e.name] || 0) + 1;
+  for (const d of S.plan?.days || []) for (const e of d.exercises || []) cnt[e.name] = (cnt[e.name] || 0) + 0.5;
+  for (const n of Object.keys(EX_ALIAS)) cnt[n] = (cnt[n] || 0) + 0.8;
+  return Object.keys(cnt).filter(n => EXLIB[n] || cnt[n] >= 1).sort((a, b) => cnt[b] - cnt[a]);
+}
+const CATS = ['⭐ Meine', 'Brust','Rücken','Schultern','Bizeps','Trizeps','Beine (Quadrizeps)','Beinbeuger/Po','Waden','Bauch'];
 const catShort = c => ({ 'Beine (Quadrizeps)':'Beine vorne', 'Beinbeuger/Po':'Beine hinten/Po' })[c] || c;
 function openPicker(ctx){ pickCtx = ctx; renderPicker(); }
 function renderPicker(){
   const eq = S.profile?.equip || 'gym', un = unavailable(), q = norm($('#pickQ')?.value || '');
-  const list = Object.keys(EXLIB).filter(n => !un.includes(n) && (q ? norm(n).includes(q) : EXLIB[n].m === pickCat))
+  const list = pickCat === '⭐ Meine' && !q ? myExercises().filter(n => !un.includes(n)) : Object.keys(EXLIB).filter(n => !un.includes(n) && (q ? norm(n + ' ' + (EX_ALIAS[n] || '')).includes(q) : EXLIB[n].m === pickCat))
     .sort((a, b) => (EXLIB[a].eq.includes(eq) ? 0 : 1) - (EXLIB[b].eq.includes(eq) ? 0 : 1) || (EXLIB[a].t === 'c' ? 0 : 1) - (EXLIB[b].t === 'c' ? 0 : 1));
   const chosen = pickCtx.chosen ? pickCtx.chosen() : [];
   openSheet(`<div class="row"><h2 class="grow">Übung hinzufügen</h2><button class="icon-btn" data-act="pickBack">✕</button></div>
     <input id="pickQ" autocomplete="off" placeholder="Suchen…" value="${esc($('#pickQ')?.value || '')}" style="margin-top:6px">
     <div class="cats">${CATS.map(c => `<button class="cat${c === pickCat && !q ? ' on' : ''}" data-act="pickCat" data-c="${esc(c)}">${gfx('cat:' + c) ? `<img src="${gfx('cat:' + c)}" alt="">` : ''}${esc(catShort(c))}</button>`).join('')}</div>
-    <div>${list.map(n => `<div class="exrow" data-act="pickEx" data-n="${esc(n)}">${exImg(n, true)}<div class="grow"><div class="small" style="font-weight:700">${esc(n)}</div><div class="eqtag">${EXLIB[n].t === 'c' ? 'Grundübung' : 'Isolation'}${EXLIB[n].eq.includes(eq) ? '' : ' · andere Geräte'}</div></div>${chosen.includes(n) ? '<span class="pill" style="background:var(--lime);color:#0e0e12">drin</span>' : `<span class="pick-plus">${IC.plus}</span>`}</div>`).join('') || '<p class="muted small">Nichts gefunden.</p>'}</div>
+    <div>${list.map(n => `<div class="exrow" data-act="pickEx" data-n="${esc(n)}">${exImg(n, true)}<div class="grow"><div class="small" style="font-weight:700">${esc(n)}${EX_ALIAS[n] ? ` <span class="pill" style="font-size:10px;padding:1px 6px">${esc(EX_ALIAS[n])}</span>` : ''}</div><div class="eqtag">${!EXLIB[n] ? 'Eigene Übung' : (EXLIB[n].t === 'c' ? 'Grundübung' : 'Isolation') + (EXLIB[n].eq.includes(eq) ? '' : ' · andere Geräte')}</div></div>${chosen.includes(n) ? '<span class="pill" style="background:var(--lime);color:#0e0e12">drin</span>' : `<span class="pick-plus">${IC.plus}</span>`}</div>`).join('') || '<p class="muted small">Nichts gefunden.</p>'}</div>
     <div class="row" style="margin-top:10px"><input id="pickCustom" placeholder="Eigene Übung (Name)"><button class="btn ghost sm" data-act="pickCustom">${IC.plus}</button></div>`, true);
   if (q) setTimeout(() => { const i = $('#pickQ'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }, 0);
 }
@@ -2744,7 +2754,7 @@ function renderLogger(){
   if (!draft) return;
   openSheet(`<div class="row"><h2 class="grow">${esc(draft.day)}${draft.edit ? ` <span class="muted small" style="font-family:'Space Grotesk'">${esc(fmtDate(draft.date))}</span>` : ''}</h2><button class="icon-btn" data-act="cancelWorkout">✕</button></div>
     <p class="muted small">Trag Gewicht & Wiederholungen ein. RIR = Wiederholungen, die du noch geschafft hättest.</p>
-    ${draft.exercises.map((e, ei) => `<div class="ex"><div class="row"><b class="grow">${esc(e.name)}</b><span class="pill">${esc(e.planned ?? e.sets.length)}× ${esc(e.reps)} · RIR ${esc(e.rir || '1–3')}</span></div>
+    ${draft.exercises.map((e, ei) => `<div class="ex"><div class="row"><b class="grow">${esc(e.name)}${EX_ALIAS[e.name] ? ` <span class="pill" style="font-size:10px;padding:1px 6px">${esc(EX_ALIAS[e.name])}</span>` : ''}</b><span class="pill">${esc(e.planned ?? e.sets.length)}× ${esc(e.reps)} · RIR ${esc(e.rir || '1–3')}</span></div>
       ${e.last ? `<div class="muted small">Letztes Mal (${esc(fmtDate(e.last.date))}): ${e.last.sets.map(s => `${de(s.kg)}×${s.reps}`).join(', ')}</div>` : ''}
       <div class="hint">${esc(suggestion(e, e.last))}</div>${e.target ? `<div class="tg-row"><span>🎯 Heute: ${e.target.map(t => t.kg ? `${de(t.kg)}×${t.reps}` : `${t.reps} Wdh.`).join(' · ')}</span><button class="btn sm acc" data-act="fillTarget" data-ex="${ei}">Übernehmen</button></div>` : ''}${(() => { const v = s2 => s2.reduce((a, x) => a + num(x.kg || 1) * num(x.reps), 0), now = v(e.sets.filter(x => num(x.reps))), before = e.last ? v(e.last.sets) : 0; return now && before ? `<div class="vol ${now >= before ? 'up' : 'dn'}">${now >= before ? '▲' : '▼'} Volumen ${r0(now / before * 100)} % vom letzten Mal</div>` : ''; })()}${e.note ? `<div class="muted small">${esc(e.note)}</div>` : ''}
       ${EXLIB[e.name] ? `<div class="muted small" style="margin-top:4px">${esc(EXLIB[e.name].cue)}</div>` : ''}
