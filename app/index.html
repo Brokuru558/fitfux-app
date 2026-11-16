@@ -218,7 +218,7 @@ nav.bottom button.on svg{transform:rotate(-8deg) scale(1.1);transition:transform
 .fw.loss .fw-blob .bl{animation:fwMelt 3s ease-in-out infinite}.fw.gain .fw-blob .bl{animation:fwWobble 2.2s ease-in-out infinite}
 .fw.anim.loss .fw-blob .bl{animation:fwShrink 1.4s cubic-bezier(.3,1.4,.5,1) both,fwMelt 3s 1.4s ease-in-out infinite}.fw.anim.gain .fw-blob .bl{animation:fwGrow 1.4s cubic-bezier(.3,1.6,.5,1) both,fwWobble 2.2s 1.4s ease-in-out infinite}
 .fw-blob .drips circle{animation:fwDrip 1.8s ease-in infinite}.fw-blob .drips circle:nth-child(2){animation-delay:.6s}.fw-blob .drips circle:nth-child(3){animation-delay:1.2s}
-.fw-num{display:flex;flex-direction:column;gap:2px}.fw-num b{font-family:Bungee,Impact,sans-serif;font-weight:400;font-size:40px;line-height:1.05}.fw.loss .fw-num b{color:var(--lime)}.fw.gain .fw-num b{color:var(--orange)}
+.bv-seg{display:flex;align-items:center;justify-content:center;overflow:hidden}.bv-seg .bvi{color:rgba(15,10,30,.75);flex:none;opacity:0;animation:bviIn .4s ease forwards;animation-delay:calc(var(--d,0s) + .5s)}@keyframes bviIn{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}.bv:not(.anim) .bv-seg .bvi{animation:none;opacity:1}.bv-leg i.lg{display:inline-flex!important;align-items:center;justify-content:center;width:16px!important;height:16px!important;border-radius:5px!important;color:rgba(15,10,30,.8)}.fw-tot{font-size:12px;font-weight:600;color:var(--muted);opacity:.85}.fw-d.fut{opacity:.35}.fw-num{display:flex;flex-direction:column;gap:2px}.fw-num b{font-family:Bungee,Impact,sans-serif;font-weight:400;font-size:40px;line-height:1.05}.fw.loss .fw-num b{color:var(--lime)}.fw.gain .fw-num b{color:var(--orange)}
 .fw-chart{position:relative;display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:16px}.fw-zero{position:absolute;left:0;right:0;top:55px;border-top:2px dashed var(--line)}
 .fw-d{display:flex;flex-direction:column;align-items:center;position:relative}.fw-col{position:relative;width:100%;height:110px}.fw-col i{position:absolute;left:18%;right:18%;border-radius:6px}.fw-col i.dn{top:55px;background:var(--lime);transform-origin:top}.fw-col i.up{bottom:55px;background:var(--orange);transform-origin:bottom}
 .fw.anim .fw-col i{animation:fwBar .7s cubic-bezier(.3,1.4,.5,1) both;animation-delay:var(--d)}.fw-d span{font-size:11px;color:var(--muted);margin-top:2px}.fw-d em{font-style:normal;font-size:10px;font-weight:700;white-space:nowrap}.fw-d em.up{color:var(--orange)}.fw-d em.dn{color:var(--lime)}.fw-d.off span{opacity:.4}
@@ -240,7 +240,7 @@ nav.bottom button.on svg{transform:rotate(-8deg) scale(1.1);transition:transform
 .wr-v{display:grid;grid-template-columns:90px 1fr 24px;align-items:center;gap:8px;font-size:12.5px;margin:3px 0}.wr-v>div{height:8px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden}.wr-v i{display:block;height:100%;border-radius:4px}.wr-v b{text-align:right}
 .wr-tip{margin-top:12px;padding:10px 12px;border-radius:12px;background:rgba(255,79,163,.08);font-size:13px;line-height:1.5}
 .card.dl{border-color:var(--violet);background:linear-gradient(135deg,rgba(182,109,255,.14),transparent 70%)}
-html.native [data-tab=coach],html.native [data-act=clearChat]{display:none!important}
+html.native [data-act=clearChat]{display:none!important}.ask-ic{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:linear-gradient(135deg,var(--violet),var(--pink));color:#fff;flex:none}.ask-q{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 10px}.ask-b{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:10px 12px;border-radius:14px;background:var(--raised);color:var(--ink);border:1px solid rgba(255,255,255,.06);font:600 13px/1.25 inherit;cursor:pointer}.ask-b span{font-size:18px}.ask-b:active{transform:scale(.97)}#askIn{width:100%;box-sizing:border-box}.ask-ctx{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--muted)}.ask-ctx input{width:auto!important}
 .sugg .src.off,.src.off{background:var(--violet);color:#0e0e12}.off-btn{border-style:dashed!important}
 .card.upd{border-color:var(--lime);background:linear-gradient(135deg,rgba(200,255,0,.16),transparent 70%);animation:bvPop .5s cubic-bezier(.3,1.6,.5,1) both}.upd-ico{font-size:30px;margin-right:10px;display:inline-block;animation:sbRun 1.2s ease-in-out infinite}
 .cl-save{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:14px;font-weight:600}.cl-save input{width:20px!important;height:20px;flex:none;margin:0}
@@ -756,6 +756,16 @@ function dayBudget(date){
   return { kcal: r0(kcal), protein, fat, carbs, mode:'daily', pure, floored, parts:{ bmr:r0(bmr), base:r0(base), stepK:r0(stepK), trainK:r0(trainK), sportK:r0(sportK), tefK:r0(tefK), jobK:r0(jobK), calib:r0(calib), burn:r0(tdee), adj:r0(adj), steps, est, trained: trainK > 0 } };
 }
 let _bvKey = '';
+const BVI = {
+  'Grundumsatz':'<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/><path d="M6 12h3l1.5-2.5 2 5L14 12h4"/>',
+  'Schritte':'<path d="M7 4c1.7 0 2.5 2 2.5 4.5S8.6 12 7 12 4.5 10.6 4.5 8.5 5.3 4 7 4z"/><path d="M5.5 14.5h3v2a1.5 1.5 0 0 1-3 0z"/><path d="M17 8c1.7 0 2.5 2 2.5 4.5S18.6 16 17 16s-2.5-1.4-2.5-3.5S15.3 8 17 8z"/><path d="M15.5 18.5h3v1a1.5 1.5 0 0 1-3 0z"/>',
+  'Verdauung':'<path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2.4 1.3-3.8 2.5-5 .3 1.6 1 2.6 2 3 0-3 .5-5.5.5-8z"/>',
+  'Stehen/Alltag':'<circle cx="12" cy="4.5" r="2"/><path d="M12 7.5v7M8 10.5h8M12 14.5l-3 6M12 14.5l3 6"/>',
+  'Krafttraining':'<path d="M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12"/>',
+  'Sport':'<circle cx="12" cy="12" r="8"/><path d="M12 7l4 3-1.5 4.5h-5L8 10z"/><path d="M12 4v3M16 10l3.5-1.5M14.5 14.5l2 3.5M9.5 14.5l-2 3.5M8 10L4.5 8.5"/>',
+  'Abgleich':'<path d="M12 4v16M5 20h14M5 8h14M5 8l-2.5 6a2.5 2.5 0 0 0 5 0zM19 8l-2.5 6a2.5 2.5 0 0 0 5 0z"/>',
+};
+const bvIcon = (l, sz = 14) => BVI[l] ? `<svg class="bvi" width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${BVI[l]}</svg>` : '';
 function budgetLine(B, eaten = 0, force = false){
   if (!B || B.mode !== 'daily') return '';
   const P = B.parts;
@@ -774,13 +784,13 @@ function budgetLine(B, eaten = 0, force = false){
   const key = [burn, eaten, B.kcal].join('|'), anim = force || key !== _bvKey ? ' anim' : ''; _bvKey = key;
   const over = eaten > B.kcal, bal = r0(eaten - burn);
   let x = 0;
-  const bars = segs.map(([l, v, c], i) => { const h = `<i class="bv-seg" style="left:${pc(x)};width:${pc(v)};background:${c};--d:${i * 0.12}s" title="${l} ${fmtN(v)}"></i>`; x += v; return h; }).join('');
+  const bars = segs.map(([l, v, c], i) => { const h = `<i class="bv-seg" style="left:${pc(x)};width:${pc(v)};background:${c};--d:${i * 0.12}s" title="${l} ${fmtN(v)}">${v / scale > 0.07 ? bvIcon(l, 13) : ''}</i>`; x += v; return h; }).join('');
   return `<div class="bv${anim}">
     <div class="bv-lab"><span>Verbrauch</span><b>${fmtN(burn)} kcal</b></div>
     <div class="bv-bar">${bars}${def ? `<i class="bv-def" style="left:${pc(burn - def)};width:${pc(def)};--d:${segs.length * 0.12}s"></i>` : ''}<i class="bv-mark" style="left:${pc(B.kcal)};--d:${segs.length * 0.12 + 0.2}s"><span>Ziel ${fmtN(B.kcal)} ▸</span></i></div>
     <div class="bv-lab" style="margin-top:22px"><span>Gegessen</span><b style="color:${over ? 'var(--orange)' : 'var(--lime)'}">${fmtN(eaten)} kcal</b></div>
     <div class="bv-bar thin"><i class="bv-seg eat${over ? ' over' : ''}" style="left:0;width:${pc(eaten)};--d:${segs.length * 0.12 + 0.35}s"></i><i class="bv-mark ghost" style="left:${pc(B.kcal)}"></i></div>
-    <div class="bv-leg">${segs.map(([l, v, c, h]) => `<span title="${esc(h)}"><i style="background:${c}"></i>${l} <b>${fmtN(v)}</b></span>`).join('')}${def ? `<span><i class="hatch"></i>Defizit <b>−${fmtN(def)}</b></span>` : ''}${B.floored ? `<span style="flex-basis:100%">Untergrenze = Grundumsatz ${fmtN(B.kcal)} – Schritte, Training &amp; Essen kommen obendrauf</span>` : ''}${sur ? `<span><i style="background:var(--lime)"></i>Überschuss <b>+${fmtN(sur)}</b></span>` : ''}</div>
+    <div class="bv-leg">${segs.map(([l, v, c, h]) => `<span title="${esc(h)}"><i class="lg" style="background:${c}">${bvIcon(l, 10)}</i>${l} <b>${fmtN(v)}</b></span>`).join('')}${def ? `<span><i class="hatch"></i>Defizit <b>−${fmtN(def)}</b></span>` : ''}${B.floored ? `<span style="flex-basis:100%">Untergrenze = Grundumsatz ${fmtN(B.kcal)} – Schritte, Training &amp; Essen kommen obendrauf</span>` : ''}${sur ? `<span><i style="background:var(--lime)"></i>Überschuss <b>+${fmtN(sur)}</b></span>` : ''}</div>
     ${eaten ? `<div class="bv-bal ${bal <= 0 ? 'ok' : 'bad'}">Echte Bilanz <b>${bal <= 0 ? '−' : '+'}${fmtN(Math.abs(bal))} kcal</b><span>${bal <= 0 ? (def && -bal >= def * 0.9 ? 'Ziel-Defizit geschafft 🔥' : `Im Defizit · Ziel −${fmtN(def)}`) : 'über dem Verbrauch'}</span></div>` : ''}
   </div>`;
 }
@@ -1140,32 +1150,38 @@ function gauge(val, max){
 function slotRing(v, max){ const R = 25, C = 2 * Math.PI * R, f = Math.min(1, max ? v / max : 0); return `<svg width="58" height="58" viewBox="0 0 58 58" class="sr"><circle cx="29" cy="29" r="${R}" fill="none" stroke="var(--raised)" stroke-width="4"/><circle cx="29" cy="29" r="${R}" fill="none" stroke="${v > max * 1.1 ? 'var(--orange)' : 'var(--lime)'}" stroke-width="4" stroke-linecap="round" stroke-dasharray="${C * f} ${C}" transform="rotate(-90 29 29)"/></svg>`; }
 /* ---------- Fett-Bilanz der letzten 7 Tage ---------- */
 let _fatKey = '';
-function fatWeek(){
-  const days = [...Array(7)].map((_, i) => addDays(today(), i - 6));
-  const rows = days.map(d => { const meals = S.days[d]?.meals || []; if (!meals.length) return { d, tracked:false };
-    const B = dayBudget(d), eat = dayTotals(d).kcal, burn = B?.parts?.burn ?? (B ? B.kcal - (B.parts?.adj || 0) : 0);
-    return { d, tracked:true, eat, burn, bal: r0(eat - burn) }; });
+function fatBal(d){ const meals = S.days[d]?.meals || []; if (!meals.length || d > today()) return null;
+  const B = dayBudget(d), eat = dayTotals(d).kcal, burn = B?.parts?.burn ?? (B ? B.kcal - (B.parts?.adj || 0) : 0);
+  return { eat, burn, bal: r0(eat - burn) }; }
+function fatWeek(){   // Kalenderwoche Mo–So, startet jeden Montag neu
+  const t = today(), wd = (new Date(t + 'T12:00').getDay() + 6) % 7, mon = addDays(t, -wd);
+  const days = [...Array(7)].map((_, i) => addDays(mon, i));
+  const rows = days.map(d => { const b = fatBal(d); return b ? { d, tracked:true, ...b } : { d, tracked:false, future: d > t }; });
   const tr = rows.filter(r => r.tracked), sum = tr.reduce((a, r) => a + r.bal, 0);
-  return { rows, tracked: tr.length, sum, grams: r0(sum / 7.7) };   // 1 g Körperfett ≈ 7,7 kcal
+  let all = 0, n = 0, first = '';
+  Object.keys(S.days || {}).sort().forEach(d => { const b = fatBal(d); if (b) { all += b.bal; n++; if (!first) first = d; } });
+  return { rows, tracked: tr.length, sum, grams: r0(sum / 7.7), mon, end: days[6], total: { sum: all, grams: r0(all / 7.7), days: n, first } };   // 1 g Körperfett ≈ 7,7 kcal
 }
+function kw(d){ const x = new Date(d + 'T12:00'); x.setDate(x.getDate() + 3 - (x.getDay() + 6) % 7); const y = new Date(x.getFullYear(), 0, 4); return 1 + Math.round(((x - y) / 864e5 - 3 + (y.getDay() + 6) % 7) / 7); }
+function fmtD(d){ if (!d) return ''; const [y, m, t] = d.split('-'); return `${+t}.${+m}.`; }
 function fatCard(){
-  const F = fatWeek(); if (!F.tracked) return '';
+  const F = fatWeek(); if (!F.tracked && !F.total.days) return '';
   const loss = F.grams <= 0, g = Math.abs(F.grams), key = F.rows.map(r => r.bal || 0).join(','), anim = key !== _fatKey; _fatKey = key;
   const max = Math.max(300, ...F.rows.filter(r => r.tracked).map(r => Math.abs(r.bal)));
   const WD = ['So','Mo','Di','Mi','Do','Fr','Sa'];
   const bars = F.rows.map((r, i) => { const wd = WD[new Date(r.d + 'T12:00').getDay()];
-    if (!r.tracked) return `<div class="fw-d off"><div class="fw-col"></div><span>${wd}</span></div>`;
+    if (!r.tracked) return `<div class="fw-d off${r.future ? ' fut' : ''}"><div class="fw-col"></div><span>${wd}</span></div>`;
     const h = Math.min(50, Math.abs(r.bal) / max * 50), up = r.bal > 0;
     return `<div class="fw-d" title="${fmtN(r.eat)} gegessen · ${fmtN(r.burn)} verbraucht"><div class="fw-col"><i class="${up ? 'up' : 'dn'}" style="height:${(h * 1.1).toFixed(1)}px;--d:${i * 0.09}s"></i></div><span>${wd}</span><em class="${up ? 'up' : 'dn'}">${up ? '+' : '−'}${fmtN(Math.abs(r.bal))}</em></div>`; }).join('');
   const blob = loss ? Math.max(0.6, 1 - g / 1500) : Math.min(1.25, 0.9 + g / 1500);
-  return `<div class="sec-h"><h2>Fett-Bilanz</h2><span class="muted small">letzte 7 Tage</span></div>
+  return `<div class="sec-h"><h2>Fett-Bilanz</h2><span class="muted small">KW ${kw(F.mon)} · ${fmtD(F.mon)}–${fmtD(F.end)}</span></div>
   <div class="card fw ${loss ? 'loss' : 'gain'}${anim ? ' anim' : ''}">
     <div class="fw-top">
       <div class="fw-blob"><svg viewBox="0 0 100 100" style="--s:${blob.toFixed(2)}"><g class="bl"><path d="M50 14c18 0 34 12 34 32 0 22-14 40-34 40S16 68 16 46c0-20 16-32 34-32z"/><ellipse class="sh" cx="38" cy="34" rx="9" ry="6"/></g>${loss ? '<g class="drips"><circle cx="30" cy="80" r="4"/><circle cx="62" cy="84" r="3.2"/><circle cx="46" cy="88" r="2.6"/></g><g class="flames"><path d="M20 96c-4-8 4-10 2-18 6 4 8 10 4 18z"/><path d="M50 98c-5-9 5-12 2-21 7 5 9 12 4 21z"/><path d="M80 96c-4-8 4-10 2-18 6 4 8 10 4 18z"/></g>' : '<g class="plus"><path d="M82 18v14M75 25h14"/><path d="M14 22v10M9 27h10"/></g>'}</svg></div>
-      <div class="fw-num"><span class="muted small">${loss ? 'Fett abgearbeitet' : 'Fett angefuttert'}</span><b><span class="fw-count" data-to="${g}">${anim ? 0 : fmtN(g)}</span> g</b><span class="muted small">${loss ? '−' : '+'}${fmtN(Math.abs(F.sum))} kcal · ${F.tracked}/7 Tage getrackt</span></div>
+      <div class="fw-num"><span class="muted small">${!F.tracked ? 'Neue Woche – los geht’s' : loss ? 'Fett abgearbeitet' : 'Fett angefuttert'}</span><b><span class="fw-count" data-to="${g}">${anim ? 0 : fmtN(g)}</span> g</b><span class="muted small">${loss ? '−' : '+'}${fmtN(Math.abs(F.sum))} kcal · ${F.tracked}/7 Tage getrackt</span><span class="fw-tot">(gesamt seit ${fmtD(F.total.first)}: ${F.total.grams <= 0 ? '−' : '+'}${fmtN(Math.abs(F.total.grams))} g · ${F.total.days} Tage)</span></div>
     </div>
     <div class="fw-chart"><div class="fw-zero"></div>${bars}</div>
-    <p class="muted small fw-foot">${loss ? (g >= 300 ? 'Stark – das ist eine ganze Packung Butter weniger am Bauch.' : g >= 100 ? 'Läuft! Jedes Gramm zählt.' : 'Knapp im Minus – dranbleiben.') : (g >= 200 ? 'Ein paar Tage drüber – kein Drama, die Woche ist lang.' : 'Fast ausgeglichen.')} 1 g Körperfett ≈ 7,7 kcal. Nicht getrackte Tage zählen nicht mit.</p>
+    <p class="muted small fw-foot">${loss ? (g >= 300 ? 'Stark – das ist eine ganze Packung Butter weniger am Bauch.' : g >= 100 ? 'Läuft! Jedes Gramm zählt.' : 'Knapp im Minus – dranbleiben.') : (g >= 200 ? 'Ein paar Tage drüber – kein Drama, die Woche ist lang.' : 'Fast ausgeglichen.')} 1 g Körperfett ≈ 7,7 kcal. Nicht getrackte Tage zählen nicht mit. Jeden Montag startet eine neue Woche.</p>
   </div>`;
 }
 function animFat(){
@@ -1777,8 +1793,52 @@ function md(s){
   if (inList) out += '</ul>';
   return out;
 }
+/* ---------- Claude fragen (Ersatz für den Coach in der APK) ---------- */
+const ASK_Q = [
+  ['🍽️', 'Was soll ich heute noch essen?', 'Was soll ich heute noch essen, damit ich mein Kalorien- und Eiweißziel treffe? Gib mir 2–3 konkrete Vorschläge mit kcal und Eiweiß.'],
+  ['📊', 'Wie lief meine Woche?', 'Wie lief meine Woche? Bewerte Kalorienbilanz, Eiweiß, Training und Schritte und gib mir 3 konkrete Tipps für nächste Woche.'],
+  ['🏋️', 'Training anpassen', 'Schau dir mein Training an. Wo sollte ich Gewicht oder Sätze steigern, was fehlt mir?'],
+  ['🥗', 'Essen nachtragen', 'Ich habe Folgendes gegessen (bitte schätzen): '],
+];
+function askContext(){
+  const t = today(), B = dayBudget(t), T = dayTotals(t), P = S.profile || {}, F = fatWeek(), tr = trendInfo();
+  const SL = { F:'Frühstück', M:'Mittag', A:'Abend', S:'Snack' };
+  const meals = (S.days[t]?.meals || []).map(m => `- ${SL[m.slot] || m.slot || ''}: ${m.name} (${fmtN(r0(num(m.kcal)))} kcal, ${r0(num(m.p))} g E)`).join('\n') || '- noch nichts';
+  const ws = S.workouts.filter(w => w.date >= addDays(t, -7)).map(w => `- ${w.date}: ${(w.exercises || []).map(e => `${e.name} ${(e.sets || []).map(x => `${de(num(x.kg))}×${num(x.reps)}`).join('/')}`).join('; ')}`).join('\n') || '- keins';
+  return `[FitFux-Daten ${t}]
+Profil: ${P.sex === 'f' ? 'w' : 'm'}, ${P.age || '?'} J., ${P.height || '?'} cm, ${de(num(P.weight))} kg${num(P.goalWeight) ? `, Ziel ${de(num(P.goalWeight))} kg` : ''}${tr ? `, Trend ${tr.wk > 0 ? '+' : ''}${de(tr.wk)} kg/Woche` : ''}
+Heute: Ziel ${fmtN(B?.kcal || 0)} kcal / ${B?.protein || '?'} g Eiweiß · gegessen ${fmtN(r0(T.kcal))} kcal, ${r0(T.p)} g E, ${r0(T.c)} g KH, ${r0(T.f)} g F · Verbrauch ${fmtN(r0(B?.parts?.burn || 0))} kcal · Schritte ${fmtN(num(S.days[t]?.steps))}
+Mahlzeiten heute:
+${meals}
+Fett-Bilanz diese Woche: ${F.grams <= 0 ? '−' : '+'}${fmtN(Math.abs(F.grams))} g (${F.tracked}/7 Tage), gesamt ${F.total.grams <= 0 ? '−' : '+'}${fmtN(Math.abs(F.total.grams))} g
+Krafttraining letzte 7 Tage:
+${ws}
+[Wenn du Essen schätzt oder vorschlägst, das ich eintragen soll: gib am Ende einen Code im Format FITFUX {"d":"YYYY-MM-DD","items":[{"n":"Name","a":"Menge","k":kcal,"p":g,"c":g,"f":g,"s":"F|M|A|S"}]} – den füge ich in der App ein.]`;
+}
+function renderAsk(){
+  const box = $('#msgs'); $('#chatForm').style.display = 'none';
+  box.innerHTML = `<div class="card ask">
+    <div class="row" style="gap:12px;align-items:center"><div class="ask-ic">✦</div><div class="grow"><h3 style="margin:0">Claude fragen</h3><p class="muted small" style="margin:2px 0 0">Deine Tageswerte gehen automatisch mit. Antwort mit FITFUX-Code? Einfach unten einfügen.</p></div></div>
+    <div class="ask-q">${ASK_Q.map((q, i) => `<button class="ask-b" data-act="askQ" data-i="${i}"><span>${q[0]}</span>${q[1]}</button>`).join('')}</div>
+    <textarea id="askIn" rows="3" placeholder="Oder eigene Frage, z. B. „Ist Döner nach dem Training ok?“"></textarea>
+    <button class="btn acc full" data-act="askGo" style="margin-top:8px">An Claude senden ➤</button>
+    <label class="ask-ctx"><input type="checkbox" id="askCtx" checked> Meine Daten mitschicken</label>
+  </div>
+  <div class="card"><h3 style="margin:0 0 4px">Antwort eintragen</h3><p class="muted small" style="margin:0 0 10px">Hat Claude einen FITFUX-Code geschickt? Code kopieren und hier einfügen.</p>
+    <button class="btn full" data-act="askImport">📋 FITFUX-Code einfügen</button></div>`;
+  $('#coachChips').innerHTML = '';
+}
+async function askSend(q){
+  q = (q || '').trim(); if (!q) { toast('Schreib erst eine Frage'); return; }
+  const txt = ($('#askCtx')?.checked !== false ? askContext() + '\n\n' : '') + q;
+  try { await navigator.clipboard.writeText(txt); } catch {}
+  const url = 'https://claude.ai/new?q=' + encodeURIComponent(txt);
+  toast('Öffne Claude … (Text ist auch kopiert)');
+  if (window.FX?.openUrl) window.FX.openUrl(url); else window.open(url, '_blank');
+}
 function renderChat(streaming){
   const box = $('#msgs');
+  if (!sample && NATIVE()) { renderAsk(); return; }
   if (!sample) {
     box.innerHTML = `<div class="card empty"><h3>Coach nicht verfügbar</h3><p class="muted small">Der Coach-Chat funktioniert, wenn du die App in Claude (Web oder App) geöffnet hast und Claude erlaubst, hier zu antworten.</p></div>`;
     $('#chatForm').style.display = 'none'; $('#coachChips').innerHTML = ''; return;
@@ -2973,6 +3033,9 @@ document.addEventListener('click', e => {
     case 'pickBackup': (async () => { try { const t = await window.FX.pickText(); if (t) restoreFromText(t); } catch (e) { if (!/cancel/i.test(String(e?.message || e))) toast('Datei konnte nicht gelesen werden: ' + String(e?.message || e).slice(0, 60)); } })(); break;
     case 'pasteGo': restoreFromText($('#pasteIn')?.value); break;
     case 'checkUpd': checkUpdate(true); break;
+    case 'askQ': { const q = ASK_Q[+a.dataset.i]; if (q[1] === 'Essen nachtragen') { const t = $('#askIn'); t.value = q[2]; t.focus(); } else askSend(q[2]); break; }
+    case 'askGo': askSend($('#askIn')?.value); break;
+    case 'askImport': claudeImport(); break;
     case 'doUpdate': if (appUpd.latest) window.FX.openUrl(appUpd.latest.url); break;
     case 'skipUpdate': try { localStorage.setItem('fitfux:skipUpd', appUpd.latest?.tag || ''); } catch {} renderToday(); break;
     case 'hcSettings': window.FX.health.openSettings(); break;
