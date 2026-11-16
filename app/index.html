@@ -218,7 +218,7 @@ nav.bottom button.on svg{transform:rotate(-8deg) scale(1.1);transition:transform
 .fw.loss .fw-blob .bl{animation:fwMelt 3s ease-in-out infinite}.fw.gain .fw-blob .bl{animation:fwWobble 2.2s ease-in-out infinite}
 .fw.anim.loss .fw-blob .bl{animation:fwShrink 1.4s cubic-bezier(.3,1.4,.5,1) both,fwMelt 3s 1.4s ease-in-out infinite}.fw.anim.gain .fw-blob .bl{animation:fwGrow 1.4s cubic-bezier(.3,1.6,.5,1) both,fwWobble 2.2s 1.4s ease-in-out infinite}
 .fw-blob .drips circle{animation:fwDrip 1.8s ease-in infinite}.fw-blob .drips circle:nth-child(2){animation-delay:.6s}.fw-blob .drips circle:nth-child(3){animation-delay:1.2s}
-.bv-seg{display:flex;align-items:center;justify-content:center;overflow:hidden}.bv-seg .bvi{color:rgba(15,10,30,.75);flex:none;opacity:0;animation:bviIn .4s ease forwards;animation-delay:calc(var(--d,0s) + .5s)}@keyframes bviIn{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}.bv:not(.anim) .bv-seg .bvi{animation:none;opacity:1}.bv-leg i.lg{display:inline-flex!important;align-items:center;justify-content:center;width:16px!important;height:16px!important;border-radius:5px!important;color:rgba(15,10,30,.8)}.fw-tot{font-size:12px;font-weight:600;color:var(--muted);opacity:.85}.fw-d.fut{opacity:.35}.fw-num{display:flex;flex-direction:column;gap:2px}.fw-num b{font-family:Bungee,Impact,sans-serif;font-weight:400;font-size:40px;line-height:1.05}.fw.loss .fw-num b{color:var(--lime)}.fw.gain .fw-num b{color:var(--orange)}
+.bv-seg{display:flex;align-items:center;justify-content:center;overflow:hidden}.bv-seg .bvi{color:rgba(15,10,30,.75);flex:none;opacity:0;animation:bviIn .4s ease forwards;animation-delay:calc(var(--d,0s) + .5s)}@keyframes bviIn{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}.bv:not(.anim) .bv-seg .bvi{animation:none;opacity:1}.bv-leg i.lg{display:inline-flex!important;align-items:center;justify-content:center;width:16px!important;height:16px!important;border-radius:5px!important;color:rgba(15,10,30,.8)}.gf-big{font-family:Bungee,Impact,sans-serif;font-size:26px;line-height:1.1;color:var(--lime);margin:10px 0 2px}.gf-bar{height:12px;border-radius:8px;background:var(--raised);margin:14px 0 4px;overflow:hidden}.gf-bar i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,var(--cyan),var(--lime));transition:width .8s}.gf-ends{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}.gf-tip{margin:10px 0 0;padding:8px 10px;border-radius:10px;background:rgba(200,255,0,.08)}.gf-mini{margin-top:10px;padding:8px 10px;border-radius:10px;background:var(--raised);font-size:13px;cursor:pointer}.gf-mini b{color:var(--lime)}.fw-tot{font-size:12px;font-weight:600;color:var(--muted);opacity:.85}.fw-d.fut{opacity:.35}.fw-num{display:flex;flex-direction:column;gap:2px}.fw-num b{font-family:Bungee,Impact,sans-serif;font-weight:400;font-size:40px;line-height:1.05}.fw.loss .fw-num b{color:var(--lime)}.fw.gain .fw-num b{color:var(--orange)}
 .fw-chart{position:relative;display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:16px}.fw-zero{position:absolute;left:0;right:0;top:55px;border-top:2px dashed var(--line)}
 .fw-d{display:flex;flex-direction:column;align-items:center;position:relative}.fw-col{position:relative;width:100%;height:110px}.fw-col i{position:absolute;left:18%;right:18%;border-radius:6px}.fw-col i.dn{top:55px;background:var(--lime);transform-origin:top}.fw-col i.up{bottom:55px;background:var(--orange);transform-origin:bottom}
 .fw.anim .fw-col i{animation:fwBar .7s cubic-bezier(.3,1.4,.5,1) both;animation-delay:var(--d)}.fw-d span{font-size:11px;color:var(--muted);margin-top:2px}.fw-d em{font-style:normal;font-size:10px;font-weight:700;white-space:nowrap}.fw-d em.up{color:var(--orange)}.fw-d em.dn{color:var(--lime)}.fw-d.off span{opacity:.4}
@@ -1420,7 +1420,7 @@ function renderToday(){
     h += `<div class="sec-h"><h2>Körperwerte</h2><button class="link" data-act="goto" data-tab="progress">Mehr</button></div>
     <div class="card" style="text-align:center"><b>Gewicht</b><div class="muted small" data-act="setGoalW" style="cursor:pointer;text-decoration:underline dotted">${gW ? `Ziel: ${de(gW)} kg` : 'Zielgewicht festlegen'}</div>
       <div class="wrow"><button class="wbtn" data-act="wStep" data-v="-0.1" aria-label="weniger">−</button><div class="wval${wToday ? '' : ' muted'}"><b>${de(shown)}</b> kg</div><button class="wbtn" data-act="wStep" data-v="0.1" aria-label="mehr">+</button></div>
-      <div class="muted small">${wToday ? (d === today() ? 'Heute gewogen' : 'An diesem Tag gewogen') : 'Mit − / + anpassen, dann wird es für ' + (d === today() ? 'heute' : 'diesen Tag') + ' gespeichert'}${gW && lastW ? ` · noch ${de(Math.abs(shown - gW))} kg` : ''}</div></div>`;
+      <div class="muted small">${wToday ? (d === today() ? 'Heute gewogen' : 'An diesem Tag gewogen') : 'Mit − / + anpassen, dann wird es für ' + (d === today() ? 'heute' : 'diesen Tag') + ' gespeichert'}${gW && lastW ? ` · noch ${de(Math.abs(shown - gW))} kg` : ''}</div>${goalCard(true)}</div>`;
     // Aktivitäten
     const mv2 = dayMove(d), goal = num(S.profile?.stepGoal) || 8000, km = mv2.steps * (num(S.profile.height) || 175) * 0.00415 / 1000, stepKcal = r0(mv2.steps * 0.0005 * (num(S.profile.weight) || 75)), Bd = dayBudget(d), credit = Bd?.parts ? Bd.parts.stepK : null;
     h += `<div class="sec-h"><h2>Aktivitäten</h2><button class="link" data-act="addSteps">Schritte</button></div>
@@ -1656,6 +1656,43 @@ function deloadInfo(){
   const ack = S.profile?.deloadAck; const recent = ack && ack >= addDays(today(), -42);
   return { weeks, due: weeks >= 6 && !recent };
 }
+/* ---------- Zielprognose ---------- */
+function goalForecast(){
+  const gW = num(S.profile?.goalWeight); if (!gW) return null;
+  const W = [...S.weights].sort((a, b) => a.date.localeCompare(b.date)), tr = weightTrend();
+  const now = tr.length ? tr[tr.length - 1].y : num(S.profile?.weight); if (!now) return null;
+  const start = W.length ? W[0].kg : now, rem = r1(now - gW), dir = Math.sign(start - gW) || Math.sign(now - gW) || 1;
+  if (rem * dir <= 0) return { gW, now, start, done:true, prog:1 };
+  let rate = null, src = '';   // kg pro Tag (negativ = abnehmen)
+  const rec = W.filter(w => w.date >= addDays(today(), -28));
+  if (rec.length >= 3) { const xs = rec.map(w => (new Date(w.date) - new Date(rec[0].date)) / 864e5), span = xs[xs.length - 1];
+    if (span >= 10) { const mx = xs.reduce((a, b) => a + b, 0) / xs.length, my = rec.reduce((a, w) => a + w.kg, 0) / rec.length;
+      const sxx = xs.reduce((a, x) => a + (x - mx) ** 2, 0), sxy = xs.reduce((a, x, i) => a + (x - mx) * (rec[i].kg - my), 0);
+      if (sxx) { rate = sxy / sxx; src = `Waage, letzte ${r0(span)} Tage`; } } }
+  let eRate = null; { let sum = 0, n = 0; for (let i = 1; i <= 14; i++) { const b = fatBal(addDays(today(), -i)); if (b) { sum += b.bal; n++; } } if (n >= 3) eRate = sum / n / 7700; }
+  if (rate == null && eRate != null) { rate = eRate; src = 'Kalorienbilanz der letzten 2 Wochen'; }
+  const prog = Math.max(0, Math.min(1, (start - now) / (start - gW || 1)));
+  if (rate == null) return { gW, now, start, rem, prog, none:true };
+  const wk = r1(rate * 7), toward = rate * dir < 0 && Math.abs(wk) >= 0.05;
+  const mk = r => { const days = Math.abs(rem / r); return days > 1100 ? null : addDays(today(), Math.round(days)); };
+  const date = toward ? mk(rate) : null, boost = mk(rate - dir * 200 / 7700);
+  return { gW, now, start, rem, prog, rate, wk, src, toward, date, weeks: date ? Math.round((new Date(date) - new Date(today())) / 6048e5) : null, boost, eRate };
+}
+const fmtLong = d => new Date(d + 'T12:00').toLocaleDateString('de-DE', { day:'numeric', month:'long', year: d.slice(0, 4) !== today().slice(0, 4) ? 'numeric' : undefined });
+function goalCard(compact){
+  const G = goalForecast(); if (!G) return compact ? '' : `<div class="card gf"><h3 style="margin:0 0 4px">📅 Zielprognose</h3><p class="muted small" style="margin:0 0 10px">Leg ein Zielgewicht fest, dann rechne ich aus, wann du es erreichst.</p><button class="btn full" data-act="setGoalW">Zielgewicht festlegen</button></div>`;
+  const bar = `<div class="gf-bar"><i style="width:${(G.prog * 100).toFixed(1)}%"></i></div><div class="gf-ends"><span>${de(G.start)} kg</span><span>${de(G.now)} kg</span><span>🎯 ${de(G.gW)} kg</span></div>`;
+  if (G.done) return `<div class="card gf done"><h3 style="margin:0">🎉 Ziel erreicht!</h3><p class="muted small">${de(G.now)} kg – Zeit für ein neues Ziel?</p>${compact ? '' : bar}</div>`;
+  let big, sub;
+  if (G.none) { big = 'Noch zu wenig Daten'; sub = 'Wieg dich 2–3× pro Woche oder tracke ein paar Tage, dann kommt die Prognose.'; }
+  else if (!G.date) { big = G.toward ? 'Über 3 Jahre' : 'Gerade kein Fortschritt'; sub = `Trend ${G.wk > 0 ? '+' : ''}${de(G.wk)} kg/Woche${G.boost ? ` · mit 200 kcal weniger am Tag: <b>${fmtLong(G.boost)}</b>` : ''}`; }
+  else { big = fmtLong(G.date); sub = `in ~${G.weeks} Woche${G.weeks === 1 ? '' : 'n'} · ${G.wk > 0 ? '+' : ''}${de(G.wk)} kg/Woche`; }
+  if (compact) return `<div class="gf-mini" data-act="goto" data-tab="progress">📅 ${G.date ? `Ziel ${de(G.gW)} kg ≈ <b>${big}</b>` : big}</div>`;
+  return `<div class="card gf"><div class="row"><h3 class="grow" style="margin:0">📅 Zielprognose</h3><span class="pill">noch ${de(Math.abs(G.rem))} kg</span></div>
+    <div class="gf-big">${big}</div><div class="muted small">${sub}</div>${bar}
+    ${G.date && G.boost && G.boost < G.date ? `<p class="small gf-tip">⚡ Mit 200 kcal weniger am Tag (≈ 4.000 Schritte mehr) schon am <b>${fmtLong(G.boost)}</b>.</p>` : ''}
+    ${G.src ? `<p class="muted small" style="margin:6px 0 0">Basis: ${G.src}. Die Prognose wird mit jeder Messung genauer.</p>` : ''}</div>`;
+}
 function renderProgress(){
   const sec = $('#tab-progress'); if (editing(sec)) return;
   const t = targets();
@@ -1669,6 +1706,7 @@ function renderProgress(){
     h += last.map(w => `<div class="item"><div class="n">${esc(fmtDate(w.date))}</div><div class="k">${de(w.kg)} kg</div><button class="icon-btn" data-act="delWeight" data-d="${esc(w.date)}">×</button></div>`).join('');
   }
   h += `</div>`;
+  h += goalCard();
   h += measureCard();
   // calories 14 days
   const days = [...Array(14)].map((_, i) => addDays(today(), i - 13));
