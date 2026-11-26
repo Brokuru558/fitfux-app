@@ -715,10 +715,13 @@ function targets(){
 // MET-Werte nach Compendium of Physical Activities (Ainsworth/Herrmann 2024)
 const ACTS = [['Gehen (zügig)',4.3],['Wandern',6],['Joggen (~8 km/h)',8.3],['Laufen (~10 km/h)',9.8],['Laufen (~12 km/h)',11.5],['Radfahren (gemütlich)',6.8],['Radfahren (zügig)',8],['E-Bike',4],['Spinning / Indoor-Cycling',8.5],['Schwimmen (moderat)',5.8],['Rudergerät',7],['Crosstrainer',5],['HIIT / Zirkeltraining',8],['Fußball',7],['Basketball / Volleyball',6.5],['Tennis / Badminton',7],['Yoga / Mobility',2.5],['Tanzen',5],['Klettern / Bouldern',7.5],['Extra-Krafttraining (nicht im Plan)',5]];
 function actKcal(type, min){ const w = num(S.profile?.weight) || 75; const met = (ACTS.find(a => a[0] === type) || [0, 5])[1]; return r0(met * w * min / 60); }
+function workoutMin(wo){   // gemessene Zeit ist oft zu kurz (Logger erst spät geöffnet) → mind. ~3 min pro Satz inkl. Pause
+  const sets = (wo?.exercises || []).reduce((a, e) => a + (e.sets?.length || 0), 0), est = Math.min(120, Math.max(30, sets * 3)), min = num(wo?.min);
+  return wo?.minSet && min ? min : Math.max(min, est);
+}
 function workoutKcal(wo){
-  const w = num(S.profile?.weight) || 75; let min = num(wo?.min);
-  if (!min) { const sets = (wo?.exercises || []).reduce((a, e) => a + (e.sets?.length || 0), 0); min = Math.min(120, Math.max(30, sets * 3)); }   // ~3 min pro Satz inkl. Pause
-  return r0(w * 4 * min / 60);   // Krafttraining netto ≈ 4 kcal/kg/h über Ruhe
+  const w = num(S.profile?.weight) || 75;
+  return r0(w * 4 * workoutMin(wo) / 60);   // Krafttraining netto ≈ 4 kcal/kg/h über Ruhe
 }
 function dayMove(date){
   const d = S.days[date] || {}, w = num(S.profile?.weight) || 75;
@@ -1515,7 +1518,7 @@ function renderTrain(){
   h += `<div class="card"><h2>${esc(new Date(d).toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long' }))}</h2>`;
   if (wk.length) h += wk.map(w => { const sets = (w.exercises || []).reduce((a,e) => a + (e.sets?.length || 0), 0); return `<div class="fx-card" style="border-color:var(--lime)"><div class="row"><b class="grow">✓ ${esc(w.day || 'Training')}</b><span class="muted small">${sets} Sätze</span></div>
       <div class="muted small" style="margin-top:4px">${(w.exercises || []).map(e => `${esc(e.name)} ${e.sets.map(x => `${de(x.kg)}×${x.reps}`).join(' ')}`).join(' · ')}</div>
-      <div class="row" style="margin-top:8px;gap:8px;align-items:center"><span class="pill" style="background:var(--lime);color:#0e0e12">🔥 ≈ ${fmtN(workoutKcal(w))} kcal</span><span class="grow"></span><button class="btn sm ghost" data-act="editWorkout" data-id="${esc(w.id)}">Bearbeiten</button><button class="btn sm ghost" style="color:var(--bad)" data-act="askDelWorkout" data-id="${esc(w.id)}">Löschen</button></div></div>`; }).join('');
+      <div class="row" style="margin-top:8px;gap:8px;align-items:center"><button class="pill wo-k" data-act="woMin" data-id="${esc(w.id)}" style="background:var(--lime);color:#0e0e12;border:0;cursor:pointer">🔥 ≈ ${fmtN(workoutKcal(w))} kcal · ${workoutMin(w)} min ✎</button><span class="grow"></span><button class="btn sm ghost" data-act="editWorkout" data-id="${esc(w.id)}">Bearbeiten</button><button class="btn sm ghost" style="color:var(--bad)" data-act="askDelWorkout" data-id="${esc(w.id)}">Löschen</button></div></div>`; }).join('');
   if (!S.plan) {
     h += `<p class="muted">Noch kein Trainingsplan – dann kann ich dir für jeden Tag etwas empfehlen.</p><div class="row wrap"><button class="btn acc" data-act="templatePlan">Plan aus meinen Optionen</button><button class="btn ghost" data-act="coachPlan">Mit Fux erstellen</button></div>`;
   } else {
@@ -2908,7 +2911,8 @@ function finishWorkout(){
   const exercises = draft.exercises.map(e => ({ name: e.name, muscle: e.muscle || EXLIB[e.name]?.m || '', sets: e.sets.filter(s => setCounts(s) && num(s.reps) > 0).map(s => ({ kg: num(s.kg), reps: num(s.reps) })) })).filter(e => e.sets.length);
   if (!exercises.length) { toast('Noch keine Sätze eingetragen'); return; }
   const dur = draft.ts && draft.date === today() ? Math.round((Date.now() - draft.ts) / 6e4) : 0;
-  const w = { id: draft.id, date: draft.date, day: draft.day, ts: draft.ts, exercises, ...(dur >= 15 && dur <= 180 ? { min: dur } : {}) };
+  const old = draft.edit ? S.workouts.find(x => x.id === draft.id) : null;
+  const w = { id: draft.id, date: draft.date, day: draft.day, ts: draft.ts, exercises, ...(old ? (old.min ? { min: old.min, minSet: !!old.minSet } : {}) : dur >= 15 && dur <= 180 ? { min: dur } : {}) };
   S.workouts = [w, ...S.workouts.filter(x => x.id !== w.id)];
   put('workouts/' + w.id, w);
   draft = null; try { localStorage.removeItem('fitti:draft'); } catch {}
@@ -2916,7 +2920,7 @@ function finishWorkout(){
 }
 function viewWorkout(id){
   const w = S.workouts.find(x => x.id === id); if (!w) return;
-  openSheet(`<div class="row"><h2 class="grow">${esc(w.day)}</h2><button class="icon-btn" data-act="closeSheet">✕</button></div><p class="muted small">${esc(fmtDate(w.date))} · 🔥 ≈ ${fmtN(workoutKcal(w))} kcal${w.min ? ` · ${w.min} min` : ''}</p>
+  openSheet(`<div class="row"><h2 class="grow">${esc(w.day)}</h2><button class="icon-btn" data-act="closeSheet">✕</button></div><p class="muted small">${esc(fmtDate(w.date))} · 🔥 ≈ ${fmtN(workoutKcal(w))} kcal· ${workoutMin(w)} min</p>
     ${w.exercises.map(e => `<div class="ex"><b>${esc(e.name)}</b><div class="muted small">${e.sets.map(s => `${de(s.kg)} kg × ${s.reps}`).join(' · ')}</div></div>`).join('')}
     <div class="row wrap" style="margin-top:12px"><button class="btn acc sm" data-act="editWorkout" data-id="${esc(w.id)}">Bearbeiten / ergänzen</button><button class="btn ghost sm" style="color:var(--bad)" data-act="askDelWorkout" data-id="${esc(w.id)}">Einheit löschen</button></div>`);
 }
@@ -3006,6 +3010,9 @@ document.addEventListener('click', e => {
     case 'addSet': { const ex = draft.exercises[+a.dataset.ex]; const l = ex.sets[ex.sets.length - 1]; ex.sets.push({ kg: l?.kg ?? '', reps: l?.reps ?? '', done:false, edited:false }); renderLogger(); break; }
     case 'fillTarget': { const ex = draft.exercises[+a.dataset.ex]; (ex.target || []).forEach((t, k) => { if (!ex.sets[k]) ex.sets.push({ kg:'', reps:'' }); ex.sets[k].kg = t.kg; ex.sets[k].reps = t.reps; ex.sets[k].edited = ex.sets[k].edited || false; ex.sets[k].done = ex.sets[k].done || false; }); try { localStorage.setItem('fitti:draft', JSON.stringify(draft)); } catch {} renderLogger(); toast('Ziel eingetragen – anpassen, falls es anders lief'); break; }
     case 'qStep': { const row = a.closest('.frow'), inp = row.querySelector('.fr-qn'), cur = qVal(inp.value) || 0, B = JSON.parse(row.dataset.base), step = B.n >= 20 ? (B.n >= 100 ? 10 : 5) : Number.isInteger(B.n) ? 1 : (B.n < 1 ? .25 : .5); const nv = Math.max(step, Math.round((cur + step * +a.dataset.d) / step) * step); inp.value = qFmt(nv); qApply(row, nv); break; }
+    case 'woMin': { const w = S.workouts.find(x => x.id === a.dataset.id); if (!w) break;
+      openSheet(`<h2>Wie lange hast du trainiert?</h2><p class="muted small">Mit Aufwärmen und Pausen. Daraus rechne ich die kcal: ca. ${r0((num(S.profile?.weight) || 75) * 4 / 60 * 10) / 10} kcal pro Minute.</p><div class="row" style="gap:8px;align-items:center;margin-top:10px"><input id="woMinIn" inputmode="numeric" value="${workoutMin(w)}" style="font-size:22px;font-weight:800;text-align:center;max-width:120px"><span class="muted">Minuten</span></div><button class="btn acc full" style="margin-top:14px" data-act="woMinSave" data-id="${esc(w.id)}">Speichern</button>`); break; }
+    case 'woMinSave': { const w = S.workouts.find(x => x.id === a.dataset.id), v = Math.round(num($('#woMinIn')?.value)); if (!w || !(v > 0)) break; w.min = Math.min(300, v); w.minSet = true; put('workouts/' + w.id, w); closeSheet(); renderAll(); toast(`Training: ${w.min} min · ≈ ${fmtN(workoutKcal(w))} kcal`); break; }
     case 'toToday': S.viewDate = today(); renderToday(); break;
     case 'setDone': { const e = draft.exercises[+a.dataset.ex], x = e.sets[+a.dataset.set]; const on = !setCounts(x);
       if (on) { const ph = e.target?.[+a.dataset.set] || e.last?.sets[+a.dataset.set] || {}; if (x.kg === '' && ph.kg != null) x.kg = ph.kg; if (x.reps === '' && ph.reps != null) x.reps = ph.reps; }
